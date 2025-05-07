@@ -21,4 +21,3 @@ Ce projet contient l'implémentation d'un backend e-commerce en PHP avec MySQL.
 ## Utilisation
 
 L'API est accessible via les points d'entrée définis dans le dossier `api/`.
-

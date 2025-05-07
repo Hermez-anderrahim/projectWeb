@@ -105,6 +105,7 @@ const UserAPI = {
 
   // Register user
   async register(userData) {
+    console.log("logging in ", userData);
     try {
       const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
         method: "POST",

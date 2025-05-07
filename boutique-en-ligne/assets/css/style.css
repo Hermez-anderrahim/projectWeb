@@ -307,7 +307,7 @@ img {
   @media screen and (max-width: 992px) {
     .hero-section {
       flex-direction: column;
-      background: var(--lighter-grey);
+      background: #06d6a0;
       text-align: center;
     }
 
@@ -442,6 +442,9 @@ img {
     .footer-content {
       grid-template-columns: 1fr;
     }
+    .footer-content {
+      border: 5px solid red !important;
+    }
   }
 
   /* Very small screens (Mobile Portrait) */
@@ -488,6 +491,9 @@ img {
       flex-direction: column;
       gap: var(--spacing-md);
       text-align: center;
+    }
+    .footer-content {
+      border: 5px solid red !important;
     }
   }
 }
