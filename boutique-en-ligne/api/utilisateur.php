@@ -1,234 +1,127 @@
-// assets/js/auth.js
-document.addEventListener("DOMContentLoaded", function () {
-  const loginForm = document.getElementById("login-form");
-  const registerForm = document.getElementById("register-form");
+<?php
+// api/utilisateur.php
+// Fix CORS headers to allow credentials and proper origin
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+header("Access-Control-Allow-Origin: $origin");
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+header("Access-Control-Allow-Credentials: true");
 
-  if (loginForm) {
-    loginForm.addEventListener("submit", handleLogin);
-  }
+require_once __DIR__ . '/../controllers/UtilisateurController.php';
+require_once __DIR__ . '/../utils/response.php';
 
-  if (registerForm) {
-    registerForm.addEventListener("submit", handleRegister);
-  }
-});
-
-async function handleLogin(e) {
-  e.preventDefault();
-
-  const email = document.getElementById("email").value;
-  const mot_de_passe = document.getElementById("mot_de_passe").value;
-  const messageContainer = document.getElementById("login-message");
-
-  messageContainer.innerHTML =
-    '<div class="loading">Connexion en cours...</div>';
-
-  try {
-    await UserAPI.login(email, mot_de_passe);
-    messageContainer.innerHTML =
-      '<div class="alert alert-success">Connexion réussie ! Redirection en cours...</div>';
-    setTimeout(() => {
-      window.location.href = "index.php";
-    }, 1000);
-  } catch (error) {
-    messageContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
-  }
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
-async function handleRegister(e) {
-  e.preventDefault();
+// Récupérer la méthode HTTP
+$method = $_SERVER['REQUEST_METHOD'];
 
-  const userData = {
-    nom: document.getElementById("nom").value,
-    prenom: document.getElementById("prenom").value,
-    email: document.getElementById("email").value,
-    mot_de_passe: document.getElementById("mot_de_passe").value,
-    adresse: document.getElementById("adresse").value,
-    telephone: document.getElementById("telephone").value
-  };
-
-  const passwordConfirm = document.getElementById("password_confirm").value;
-  const messageContainer = document.getElementById("register-message");
-
-  // Validate passwords match
-  if (userData.mot_de_passe !== passwordConfirm) {
-    messageContainer.innerHTML =
-      '<div class="alert alert-error">Les mots de passe ne correspondent pas.</div>';
-    return;
-  }
-
-  messageContainer.innerHTML =
-    '<div class="loading">Inscription en cours...</div>';
-
-  try {
-    await UserAPI.register(userData);
-    messageContainer.innerHTML =
-      '<div class="alert alert-success">Inscription réussie ! Vous allez être redirigé vers la page de connexion...</div>';
-    setTimeout(() => {
-      window.location.href = "index.php?route=login";
-    }, 2000);
-  } catch (error) {
-    messageContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
-  }
+// Handle preflight OPTIONS requests
+if ($method === 'OPTIONS') {
+    header("HTTP/1.1 200 OK");
+    exit;
 }
 
-// Implementation of UserAPI
-const UserAPI = {
-  // Base URL for API endpoints
-  baseUrl: "/api",
+// Récupérer les données envoyées
+$data = json_decode(file_get_contents("php://input"), true);
 
-  // Login user
-  async login(email, mot_de_passe) {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "connecter",
-          email: email,
-          mot_de_passe: mot_de_passe,
-        }),
-      });
+// Initialiser le contrôleur
+$controller = new UtilisateurController();
 
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || "Échec de la connexion");
-      }
-      
-      return data;
-    } catch (error) {
-      throw error;
+// Actions de l'API utilisateur
+try {
+    if ($method === "POST") {
+        // Vérifier si l'action est spécifiée
+        if (!isset($data['action'])) {
+            echo json_encode(Response::error('Action non spécifiée', 400));
+            exit;
+        }
+        
+        $action = $data['action'];
+        
+        switch ($action) {
+            case 'inscrire':
+                // Vérifier les champs requis
+                $required = ['nom', 'prenom', 'email', 'password', 'adresse'];
+                foreach ($required as $field) {
+                    if (!isset($data[$field]) || empty($data[$field])) {
+                        echo json_encode(Response::error("Le champ $field est requis", 400));
+                        exit;
+                    }
+                }
+                
+                $nom = $data['nom'];
+                $prenom = $data['prenom'];
+                $email = $data['email'];
+                $password = $data['password'];
+                $adresse = $data['adresse'];
+                $telephone = $data['telephone'] ?? "";
+                
+                echo json_encode($controller->inscrireUtilisateur($nom, $prenom, $email, $password, $adresse, $telephone));
+                break;
+                
+            case 'connecter':
+                // Vérifier les champs requis
+                if (!isset($data['email']) || !isset($data['password'])) {
+                    echo json_encode(Response::error('Email et mot de passe requis', 400));
+                    exit;
+                }
+                
+                $email = $data['email'];
+                $password = $data['password'];
+                $se_souvenir = isset($data['se_souvenir']) ? (bool)$data['se_souvenir'] : false;
+                
+                echo json_encode($controller->connecterUtilisateur($email, $password, $se_souvenir));
+                break;
+                
+            case 'deconnecter':
+                echo json_encode($controller->deconnecterUtilisateur());
+                break;
+                
+            case 'getInfosUtilisateur':
+                echo json_encode($controller->getInfosUtilisateur());
+                break;
+                
+            case 'mettreAJour':
+                // Vérifier l'authentification
+                if (!isset($_SESSION['utilisateur'])) {
+                    echo json_encode(Response::error('Utilisateur non connecté', 401));
+                    exit;
+                }
+                
+                echo json_encode($controller->mettreAJourUtilisateur($data));
+                break;
+                
+            case 'changerMotDePasse':
+                // Vérifier l'authentification
+                if (!isset($_SESSION['utilisateur'])) {
+                    echo json_encode(Response::error('Utilisateur non connecté', 401));
+                    exit;
+                }
+                
+                // Vérifier les champs requis
+                if (!isset($data['ancien_password']) || !isset($data['nouveau_password'])) {
+                    echo json_encode(Response::error('Ancien et nouveau mot de passe requis', 400));
+                    exit;
+                }
+                
+                $ancien_password = $data['ancien_password'];
+                $nouveau_password = $data['nouveau_password'];
+                
+                echo json_encode($controller->changerMotDePasse($ancien_password, $nouveau_password));
+                break;
+                
+            default:
+                echo json_encode(Response::error('Action non reconnue', 400));
+                break;
+        }
+    } else {
+        echo json_encode(Response::error('Méthode non autorisée', 405));
     }
-  },
-
-  // Register user
-  async register(userData) {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "inscrire",
-          ...userData,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || "Échec de l'inscription");
-      }
-      
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Logout user
-  async logout() {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "deconnecter",
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || "Échec de la déconnexion");
-      }
-      
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Get user info
-  async getUserInfo() {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "getInfosUtilisateur",
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || "Échec de la récupération des informations utilisateur");
-      }
-      
-      return data.utilisateur;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Update user info
-  async updateUserInfo(userData) {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "mettreAJour",
-          ...userData,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || "Échec de la mise à jour des informations utilisateur");
-      }
-      
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Change password
-  async changePassword(ancien_mot_de_passe, nouveau_mot_de_passe) {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "changerMotDePasse",
-          ancien_mot_de_passe,
-          nouveau_mot_de_passe,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || "Échec du changement de mot de passe");
-      }
-      
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-};
+} catch (Exception $e) {
+    echo json_encode(Response::error('Erreur serveur: ' . $e->getMessage(), 500));
+}
+?>

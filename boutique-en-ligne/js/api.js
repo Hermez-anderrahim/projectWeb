@@ -33,65 +33,84 @@ async function fetchAPI(endpoint, method = "GET", data = null) {
 // User API
 const UserAPI = {
   login: (email, password) =>
-    fetchAPI("/api/utilisateur/connecter", "POST", { email, password }),
-  register: (userData) => fetchAPI("/api/utilisateur", "POST", userData),
-  logout: () => fetchAPI("/api/utilisateur/deconnecter", "POST"),
-  getProfile: () => fetchAPI("/api/utilisateur"),
-  updateProfile: (userData) => fetchAPI("/api/utilisateur", "PUT", userData),
+    fetchAPI("/api/utilisateur.php", "POST", {
+      action: "connecter",
+      email,
+      password,
+    }),
+  register: (userData) =>
+    fetchAPI("/api/utilisateur.php", "POST", {
+      action: "inscrire",
+      ...userData,
+    }),
+  logout: () =>
+    fetchAPI("/api/utilisateur.php", "POST", { action: "deconnecter" }),
+  getProfile: () =>
+    fetchAPI("/api/utilisateur.php", "POST", { action: "getInfosUtilisateur" }),
+  updateProfile: (userData) =>
+    fetchAPI("/api/utilisateur.php", "POST", {
+      action: "mettreAJour",
+      ...userData,
+    }),
   changePassword: (passwordData) =>
-    fetchAPI("/api/utilisateur/mot-de-passe", "POST", passwordData),
+    fetchAPI("/api/utilisateur.php", "POST", {
+      action: "changerMotDePasse",
+      ...passwordData,
+    }),
 };
 
 // Product API
 const ProductAPI = {
   getAll: (page = 1, limit = 12, category = null) => {
-    let url = `/api/produit?page=${page}&limite=${limit}`;
+    let url = `/api/produit.php?page=${page}&limite=${limit}`;
     if (category) url += `&categorie=${category}`;
     return fetchAPI(url);
   },
-  getById: (id) => fetchAPI(`/api/produit/${id}`),
+  getById: (id) => fetchAPI(`/api/produit.php/${id}`),
   search: (term, category = null, minPrice = null, maxPrice = null) => {
-    let url = `/api/produit/recherche?terme=${term}`;
+    let url = `/api/produit.php/recherche?terme=${term}`;
     if (category) url += `&categorie=${category}`;
     if (minPrice) url += `&prix_min=${minPrice}`;
     if (maxPrice) url += `&prix_max=${maxPrice}`;
     return fetchAPI(url);
   },
-  create: (productData) => fetchAPI("/api/produit", "POST", productData),
+  create: (productData) => fetchAPI("/api/produit.php", "POST", productData),
   update: (id, productData) =>
-    fetchAPI(`/api/produit/${id}`, "PUT", productData),
-  delete: (id) => fetchAPI(`/api/produit/${id}`, "DELETE"),
+    fetchAPI(`/api/produit.php/${id}`, "PUT", productData),
+  delete: (id) => fetchAPI(`/api/produit.php/${id}`, "DELETE"),
 };
 
 // Cart API
 const CartAPI = {
-  getContents: () => fetchAPI("/api/panier"),
+  getContents: () => fetchAPI("/api/panier.php"),
   addItem: (productId, quantity = 1) =>
-    fetchAPI(`/api/panier/ajouter/${productId}`, "POST", {
+    fetchAPI(`/api/panier.php/ajouter/${productId}`, "POST", {
       quantite: quantity,
     }),
   updateQuantity: (productId, quantity) =>
-    fetchAPI(`/api/panier/mettre-a-jour/${productId}`, "POST", {
+    fetchAPI(`/api/panier.php/mettre-a-jour/${productId}`, "POST", {
       quantite: quantity,
     }),
   removeItem: (productId) =>
-    fetchAPI(`/api/panier/supprimer/${productId}`, "POST"),
-  clear: () => fetchAPI("/api/panier/vider", "POST"),
+    fetchAPI(`/api/panier.php/supprimer/${productId}`, "POST"),
+  clear: () => fetchAPI("/api/panier.php/vider", "POST"),
 };
 
 // Order API
 const OrderAPI = {
-  getHistory: () => fetchAPI("/api/commande"),
-  getDetails: (id) => fetchAPI(`/api/commande/${id}`),
-  create: () => fetchAPI("/api/commande/creer", "POST"),
+  getHistory: () => fetchAPI("/api/commande.php"),
+  getDetails: (id) => fetchAPI(`/api/commande.php/${id}`),
+  create: (orderData) => fetchAPI("/api/commande.php/creer", "POST", orderData),
   cancel: (id, reason) =>
-    fetchAPI(`/api/commande/annuler/${id}`, "POST", { raison: reason }),
+    fetchAPI(`/api/commande.php/annuler/${id}`, "POST", { raison: reason }),
   // Admin functions
   getAllOrders: (status = null, page = 1, limit = 20) => {
-    let url = `/api/commande/admin/toutes?page=${page}&limite=${limit}`;
+    let url = `/api/commande.php/admin/toutes?page=${page}&limite=${limit}`;
     if (status) url += `&statut=${status}`;
     return fetchAPI(url);
   },
   updateStatus: (id, status) =>
-    fetchAPI(`/api/commande/admin/statut/${id}`, "POST", { statut: status }),
+    fetchAPI(`/api/commande.php/admin/statut/${id}`, "POST", {
+      statut: status,
+    }),
 };

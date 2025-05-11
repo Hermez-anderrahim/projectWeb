@@ -30,6 +30,120 @@
     </div>
 </main>
 
+<style>
+/* Product Form Styles with Image Upload */
+.image-upload-container {
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: var(--white-color, #fff);
+}
+
+.image-preview {
+    width: 100%;
+    height: 200px;
+    background-color: var(--light-bg, #f8f9fa);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--border-color, #ddd);
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.no-image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--grey-color, #adb5bd);
+}
+
+.no-image i {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.image-upload-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.hidden-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.help-text {
+    font-size: 0.8rem;
+    color: var(--grey-color, #6c757d);
+    margin-top: 0.25rem;
+}
+
+.separator {
+    text-align: center;
+    position: relative;
+    margin: 0.5rem 0;
+    color: var(--grey-color, #6c757d);
+}
+
+.separator::before,
+.separator::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background-color: var(--border-color, #e0e0e0);
+}
+
+.separator::before {
+    left: 0;
+}
+
+.separator::after {
+    right: 0;
+}
+
+.product-modal {
+    max-width: 800px;
+    width: 100%;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    .image-upload-options {
+        flex-direction: row;
+        align-items: center;
+    }
+    
+    .separator {
+        width: 50px;
+        margin: 0 1rem;
+    }
+    
+    .separator::before,
+    .separator::after {
+        display: none;
+    }
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Check if user is admin
@@ -115,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tr data-id="${product.id_produit}">
                     <td>${product.id_produit}</td>
                     <td class="product-image-cell">
-                        <img src="${product.image_url || 'assets/images/placeholder.jpg'}" alt="${product.nom}">
+                        <img src="${product.image_url || '/assets/images/placeholder.jpg'}" alt="${product.nom}">
                     </td>
                     <td>${product.nom}</td>
                     <td>${product.categorie || 'Non catégorisé'}</td>
@@ -199,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button class="modal-close"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
-                <form id="product-form" class="product-form">
+                <form id="product-form" class="product-form" enctype="multipart/form-data">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="product-name" class="form-label">Nom du produit</label>
@@ -231,8 +345,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     
                     <div class="form-group">
-                        <label for="product-image" class="form-label">URL de l'image</label>
-                        <input type="url" id="product-image" class="form-control" value="${product && product.image_url ? product.image_url : ''}">
+                        <label class="form-label">Image du produit</label>
+                        <div class="image-upload-container">
+                            <div class="image-preview" id="image-preview">
+                                ${product && product.image_url ? 
+                                    `<img src="${product.image_url}" alt="Aperçu de l'image">` : 
+                                    `<div class="no-image"><i class="fas fa-image"></i><span>Aucune image</span></div>`
+                                }
+                            </div>
+                            <div class="image-upload-options">
+                                <div class="form-group">
+                                    <label for="product-image-file" class="btn btn-outline btn-sm">
+                                        <i class="fas fa-upload"></i> Télécharger une image
+                                    </label>
+                                    <input type="file" id="product-image-file" class="hidden-file-input" accept="image/*">
+                                    <p class="help-text">Formats supportés: JPG, PNG, GIF. Max 2MB.</p>
+                                </div>
+                                <div class="separator">OU</div>
+                                <div class="form-group">
+                                    <label for="product-image-url" class="form-label">URL de l'image</label>
+                                    <input type="url" id="product-image-url" class="form-control" value="${product && product.image_url ? product.image_url : ''}">
+                                </div>
+                            </div>
+                            <input type="hidden" id="product-image-data">
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -261,6 +397,47 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.querySelector('.modal-close').addEventListener('click', closeModal);
         modal.querySelector('.modal-cancel').addEventListener('click', closeModal);
         
+        // Image file upload handling
+        const imageFileInput = modal.querySelector('#product-image-file');
+        const imagePreview = modal.querySelector('#image-preview');
+        const imageUrlInput = modal.querySelector('#product-image-url');
+        const imageDataInput = modal.querySelector('#product-image-data');
+        
+        imageFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                    showNotification('L\'image est trop volumineuse. Maximum 2MB.', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Display image preview
+                    imagePreview.innerHTML = `<img src="${e.target.result}" alt="Aperçu de l'image">`;
+                    
+                    // Store the base64 data
+                    imageDataInput.value = e.target.result;
+                    
+                    // Clear URL input since we're using a file
+                    imageUrlInput.value = '';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // URL input handling
+        imageUrlInput.addEventListener('change', function() {
+            if (this.value) {
+                // Display image from URL
+                imagePreview.innerHTML = `<img src="${this.value}" alt="Aperçu de l'image">`;
+                
+                // Clear any uploaded file data
+                imageDataInput.value = '';
+                imageFileInput.value = '';
+            }
+        });
+        
         modal.querySelector('#save-product').addEventListener('click', async function() {
             const form = document.getElementById('product-form');
             
@@ -274,9 +451,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 categorie: document.getElementById('product-category').value,
                 prix: document.getElementById('product-price').value,
                 stock: document.getElementById('product-stock').value,
-                image_url: document.getElementById('product-image').value,
                 description: document.getElementById('product-description').value
             };
+            
+            // Handle image (either URL or uploaded file)
+            if (imageUrlInput.value) {
+                productData.image_url = imageUrlInput.value;
+            } else if (imageDataInput.value) {
+                productData.image_data = imageDataInput.value;
+            }
             
             try {
                 let result;
@@ -365,4 +548,4 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 });
-</script>
+<script/>

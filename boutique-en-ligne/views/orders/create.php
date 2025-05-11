@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
             html += `
                 <div class="cart-item">
                     <div class="item-image">
-                        <img src="${item.image_url || 'assets/images/placeholder.jpg'}" alt="${item.nom}">
+                        <img src="${item.image_url || '/assets/images/placeholder.jpg'}" alt="${item.nom}">
                         <span class="item-quantity">${item.quantite}</span>
                     </div>
                     <div class="item-details">
@@ -251,17 +251,59 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Get shipping information
+        const nom = document.getElementById('nom').value;
+        const prenom = document.getElementById('prenom').value;
+        const adresse = document.getElementById('adresse').value;
+        const code_postal = document.getElementById('code_postal').value;
+        const ville = document.getElementById('ville').value;
+        const telephone = document.getElementById('telephone').value;
+        
         // Get payment method
         const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        // Get payment details if credit card is selected
+        let paymentDetails = {};
+        if (paymentMethod === 'card') {
+            const cardNumber = document.getElementById('card_number').value;
+            const cardExpiry = document.getElementById('card_expiry').value;
+            const cardCVV = document.getElementById('card_cvv').value;
+            const cardName = document.getElementById('card_name').value;
+            
+            // Validate payment information
+            if (!cardNumber || !cardExpiry || !cardCVV || !cardName) {
+                showNotification('Veuillez remplir tous les champs de paiement', 'error');
+                return;
+            }
+            
+            paymentDetails = {
+                card_number: cardNumber,
+                card_expiry: cardExpiry,
+                card_cvv: cardCVV,
+                card_name: cardName
+            };
+        }
+        
+        // Prepare order data
+        const orderData = {
+            nom,
+            prenom,
+            adresse,
+            code_postal,
+            ville,
+            telephone,
+            payment_method: paymentMethod,
+            ...paymentDetails
+        };
         
         // Show loading state
         const orderButton = document.getElementById('place-order');
         const originalButtonText = orderButton.innerHTML;
         orderButton.disabled = true;
-        orderButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement en cours...';
+        orderButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement du paiement en cours...';
         
         try {
-            const result = await OrderAPI.create();
+            const result = await OrderAPI.create(orderData);
             
             if (result.success) {
                 // Show success message
@@ -292,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error creating order:', error);
-            showNotification('Erreur lors de la création de la commande', 'error');
+            showNotification('Erreur lors du traitement du paiement', 'error');
             orderButton.disabled = false;
             orderButton.innerHTML = originalButtonText;
         }

@@ -6,8 +6,8 @@ class Database {
     
     private $host = 'localhost';
     private $user = 'root';
-    private $pass = '';
-    private $dbname = '';
+    private $pass = 'sqlsql117';
+    private $dbname = 'boutique_en_ligne';
     
     private function __construct() {
         try {

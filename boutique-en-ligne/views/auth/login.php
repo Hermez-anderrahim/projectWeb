@@ -1,16 +1,40 @@
+<!-- In the login.php file, near the top -->
+<?php
+// Check if admin account exists and create one if needed
+require_once __DIR__ . '/../../utils/create_admin.php';
+$adminCheck = createDefaultAdmin();
+?>
+
+<link rel="stylesheet" href="/views/auth/auth-styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<!-- Add the API.js script before using UserAPI -->
+<script src="/js/api.js"></script>
+
 <main class="container">
     <div class="auth-container">
         <div class="auth-box">
             <h1 class="auth-title">Connexion</h1>
             
-            <div id="login-message"></div>
+            <div id="login-message">
+                <?php if ($adminCheck['created']): ?>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Compte Administrateur Créé</strong>
+                    <p>Un compte administrateur par défaut a été créé. Utilisez les identifiants suivants pour vous connecter:</p>
+                    <p><strong>Email:</strong> admin@footcap.com</p>
+                    <p><strong>Mot de passe:</strong> Admin123!</p>
+                    <p class="small text-muted">Veuillez changer le mot de passe après votre première connexion.</p>
+                </div>
+                <?php endif; ?>
+            </div>
             
             <form id="login-form" class="auth-form">
                 <div class="form-group">
                     <label for="email" class="form-label">Email</label>
                     <div class="input-with-icon">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" class="form-control" required placeholder="Votre adresse email">
+                        <input type="email" id="email" class="form-control" required placeholder="Votre adresse email" value="<?php echo $adminCheck['created'] ? 'admin@footcap.com' : ''; ?>">
                     </div>
                 </div>
                 
@@ -18,7 +42,7 @@
                     <label for="mot_de_passe" class="form-label">Mot de passe</label>
                     <div class="input-with-icon">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="mot_de_passe" class="form-control" required placeholder="Votre mot de passe">
+                        <input type="password" id="mot_de_passe" class="form-control" required placeholder="Votre mot de passe" value="<?php echo $adminCheck['created'] ? 'Admin123!' : ''; ?>">
                         <button type="button" class="toggle-password" id="toggle-password">
                             <i class="fas fa-eye-slash"></i>
                         </button>

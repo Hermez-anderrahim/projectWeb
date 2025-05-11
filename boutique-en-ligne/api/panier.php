@@ -1,15 +1,29 @@
 <?php
 // api/panier.php
-header("Access-Control-Allow-Origin: *");
+// Fix CORS headers to allow credentials and proper origin
+$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
+header("Access-Control-Allow-Origin: $origin");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+header("Access-Control-Allow-Credentials: true");
 
 require_once __DIR__ . '/../controllers/PanierController.php';
 require_once __DIR__ . '/../utils/response.php';
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Récupérer la méthode HTTP
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Handle preflight OPTIONS requests
+if ($method === 'OPTIONS') {
+    header("HTTP/1.1 200 OK");
+    exit;
+}
 
 // Récupérer l'action et le paramètre dans l'URL (si présents)
 $request = [];

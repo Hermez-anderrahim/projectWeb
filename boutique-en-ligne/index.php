@@ -10,14 +10,16 @@ if (strpos($_SERVER['REQUEST_URI'], '/api/') === 0) {
     exit;
 }
 
-// Frontend routing
+// Get the route parameter and debug it
 $route = $_GET['route'] ?? 'home';
 
-// Include common header
+// Debug the route - you can comment this out after fixing
+// echo "<div style='background:#f8d7da;color:#721c24;padding:10px;margin:10px;border:1px solid #f5c6cb;'>Detected Route: " . htmlspecialchars($route) . "</div>";
+
 include_once 'views/partials/header.php';
 include_once 'views/partials/navbar.php';
 
-// Router
+// Fixed routing with support for both hyphens and slash notations
 switch ($route) {
     case 'home':
         include_once 'views/products/list.php';
@@ -34,21 +36,37 @@ switch ($route) {
     case 'register':
         include_once 'views/auth/register.php';
         break;
+    case 'profile':
+        include_once 'views/users/profile.php';
+        break;
     case 'orders':
         include_once 'views/orders/history.php';
         break;
     case 'checkout':
         include_once 'views/orders/create.php';
         break;
+    
+    // Admin routes - support both formats
+    case 'admin-dashboard':
+    case 'admin/dashboard':
+        include_once 'views/admin/dashboard.php';
+        break;
     case 'admin-products':
-        // Check if user is admin
+    case 'admin/products':
         include_once 'views/admin/products.php';
         break;
     case 'admin-orders':
-        // Check if user is admin
+    case 'admin/orders':
         include_once 'views/admin/orders.php';
         break;
+        
+    // Shop route for category browsing
+    case 'shop':
+        include_once 'views/products/list.php';
+        break;
+        
     default:
+        // If not found, show 404 or redirect to home
         include_once 'views/products/list.php';
         break;
 }

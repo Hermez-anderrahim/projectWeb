@@ -8,6 +8,7 @@
     </div>
 </main>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     loadOrderHistory();
@@ -241,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalContent.innerHTML += `
                     <div class="order-item">
                         <div class="item-image">
-                            <img src="${item.image_url || 'assets/images/placeholder.jpg'}" alt="${item.nom}">
+                            <img src="${item.image_url || '/assets/images/placeholder.jpg'}" alt="${item.nom}">
                         </div>
                         <div class="item-details">
                             <div class="item-name">${item.nom}</div>

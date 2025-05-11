@@ -23,6 +23,7 @@ async function handleLogin(e) {
     '<div class="loading">Connexion en cours...</div>';
 
   try {
+    // Use the existing UserAPI from api.js
     await UserAPI.login(email, mot_de_passe);
     messageContainer.innerHTML =
       '<div class="alert alert-success">Connexion réussie ! Redirection en cours...</div>';
@@ -60,6 +61,7 @@ async function handleRegister(e) {
     '<div class="loading">Inscription en cours...</div>';
 
   try {
+    // Use the existing UserAPI from api.js
     await UserAPI.register(userData);
     messageContainer.innerHTML =
       '<div class="alert alert-success">Inscription réussie ! Vous allez être redirigé vers la page de connexion...</div>';
@@ -70,171 +72,3 @@ async function handleRegister(e) {
     messageContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
   }
 }
-
-// Implementation of UserAPI
-const UserAPI = {
-  // Base URL for API endpoints
-  baseUrl: "/api",
-
-  // Login user
-  async login(email, mot_de_passe) {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "connecter",
-          email: email,
-          mot_de_passe: mot_de_passe,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || "Échec de la connexion");
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Register user
-  async register(userData) {
-    console.log("logging in ", userData);
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "inscrire",
-          ...userData,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || "Échec de l'inscription");
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Logout user
-  async logout() {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "deconnecter",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || "Échec de la déconnexion");
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Get user info
-  async getUserInfo() {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "getInfosUtilisateur",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(
-          data.message ||
-            "Échec de la récupération des informations utilisateur"
-        );
-      }
-
-      return data.utilisateur;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Update user info
-  async updateUserInfo(userData) {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "mettreAJour",
-          ...userData,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(
-          data.message || "Échec de la mise à jour des informations utilisateur"
-        );
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Change password
-  async changePassword(ancien_mot_de_passe, nouveau_mot_de_passe) {
-    try {
-      const response = await fetch(`${this.baseUrl}/utilisateur.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "changerMotDePasse",
-          ancien_mot_de_passe,
-          nouveau_mot_de_passe,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || "Échec du changement de mot de passe");
-      }
-
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  },
-};

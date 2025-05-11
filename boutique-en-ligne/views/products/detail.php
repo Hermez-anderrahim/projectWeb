@@ -1,3 +1,30 @@
+<style>
+/* Product placeholder styles */
+.product-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e9ecef;
+    border-radius: 8px;
+}
+
+.product-placeholder i {
+    font-size: 4rem;
+    color: #adb5bd;
+    opacity: 0.5;
+}
+
+.main-image {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+</style>
+
 <main class="container">
     <div id="product-detail" class="product-detail">
         <div class="loading-spinner">Chargement du produit...</div>
@@ -51,7 +78,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="product-layout">
                 <div class="product-gallery">
                     <div class="main-image">
-                        <img src="${product.image_url || 'assets/images/placeholder.jpg'}" alt="${product.nom}" id="main-product-image">
+                        ${product.image_url ? 
+                            `<img src="${product.image_url}" alt="${product.nom}" id="main-product-image">` : 
+                            `<div class="product-placeholder">
+                                <i class="fas fa-shoe-prints"></i>
+                            </div>`
+                        }
                     </div>
                 </div>
                 

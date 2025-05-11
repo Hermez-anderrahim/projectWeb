@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="cart-row" data-id="${item.id_produit}">
                     <div class="cart-cell product-cell">
                         <div class="product-image">
-                            <img src="${item.image_url || 'assets/images/placeholder.jpg'}" alt="${item.nom}">
+                            <img src="${item.image_url || '/assets/images/placeholder.jpg'}" alt="${item.nom}">
                         </div>
                         <div class="product-info">
                             <h3 class="product-name">${item.nom}</h3>

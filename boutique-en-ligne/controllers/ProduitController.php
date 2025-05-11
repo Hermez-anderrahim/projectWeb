@@ -57,6 +57,55 @@ class ProduitController {
         ];
     }
     
+    /**
+     * Gère le téléchargement d'une image et retourne l'URL relative
+     * 
+     * @param string $image_data Données de l'image au format base64
+     * @return string|null L'URL de l'image ou null si erreur
+     */
+    private function handleImageUpload($image_data) {
+        // Vérifier si les données sont au format base64
+        if (strpos($image_data, 'data:image/') !== 0) {
+            return null;
+        }
+        
+        // Extraire les informations de l'image
+        $image_parts = explode(";base64,", $image_data);
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+        
+        // Vérifier que le type de fichier est valide
+        $allowed_types = ['jpeg', 'jpg', 'png', 'gif'];
+        if (!in_array($image_type, $allowed_types)) {
+            return null;
+        }
+        
+        // Créer un nom de fichier unique
+        $file_name = 'product_' . uniqid() . '.' . $image_type;
+        
+        // Chemin complet vers le dossier d'upload
+        $upload_dir = __DIR__ . '/../assets/uploads/products/';
+        $file_path = $upload_dir . $file_name;
+        
+        // Vérifier si le dossier existe, sinon le créer avec des permissions récursives
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+            // Set proper permissions on the directory
+            chmod($upload_dir, 0777);
+        }
+        
+        // Sauvegarder l'image
+        if (file_put_contents($file_path, $image_base64)) {
+            // Make sure the file is readable
+            chmod($file_path, 0644);
+            // Retourner l'URL relative
+            return '/assets/uploads/products/' . $file_name;
+        }
+        
+        return null;
+    }
+
     // Ajouter un nouveau produit (admin seulement)
     public function ajouterProduit($donnees) {
         // Vérifier si l'utilisateur est connecté en tant qu'admin
@@ -77,6 +126,20 @@ class ProduitController {
             ];
         }
         
+        // Gérer l'upload d'image si présent
+        $image_url = null;
+        if (isset($donnees['image_data']) && !empty($donnees['image_data'])) {
+            $image_url = $this->handleImageUpload($donnees['image_data']);
+            if (!$image_url) {
+                return [
+                    'success' => false,
+                    'message' => 'Erreur lors du téléchargement de l\'image. Format non supporté ou image corrompue.'
+                ];
+            }
+        } elseif (isset($donnees['image_url']) && !empty($donnees['image_url'])) {
+            $image_url = $donnees['image_url'];
+        }
+        
         // Ajouter le produit
         $id_produit = $this->produit->creer(
             $donnees['nom'],
@@ -84,7 +147,7 @@ class ProduitController {
             $donnees['prix'],
             $donnees['stock'],
             $donnees['categorie'] ?? null,
-            $donnees['image_url'] ?? null
+            $image_url
         );
         
         if($id_produit) {
@@ -121,13 +184,26 @@ class ProduitController {
             ];
         }
         
+        // Gérer l'upload d'image si présent
+        if (isset($donnees['image_data']) && !empty($donnees['image_data'])) {
+            $image_url = $this->handleImageUpload($donnees['image_data']);
+            if (!$image_url) {
+                return [
+                    'success' => false,
+                    'message' => 'Erreur lors du téléchargement de l\'image. Format non supporté ou image corrompue.'
+                ];
+            }
+            $this->produit->image_url = $image_url;
+        } elseif (isset($donnees['image_url'])) {
+            $this->produit->image_url = $donnees['image_url'];
+        }
+        
         // Mettre à jour les informations
         if(isset($donnees['nom'])) $this->produit->nom = $donnees['nom'];
         if(isset($donnees['description'])) $this->produit->description = $donnees['description'];
         if(isset($donnees['prix'])) $this->produit->prix = $donnees['prix'];
         if(isset($donnees['stock'])) $this->produit->stock = $donnees['stock'];
         if(isset($donnees['categorie'])) $this->produit->categorie = $donnees['categorie'];
-        if(isset($donnees['image_url'])) $this->produit->image_url = $donnees['image_url'];
         
         if($this->produit->mettreAJour()) {
             return [
@@ -163,6 +239,41 @@ class ProduitController {
             return [
                 'success' => false,
                 'message' => 'Erreur lors de la suppression du produit.'
+            ];
+        }
+    }
+    
+    // Obtenir les produits avec un stock faible (admin seulement)
+    public function getLowStockProducts($limit = 5) {
+        // Vérifier si l'utilisateur est connecté en tant qu'admin
+        $resultat_auth = Auth::verifierAuthentification(true);
+        
+        if(!$resultat_auth['authentifie']) {
+            return [
+                'success' => false,
+                'message' => 'Non autorisé. Vous devez être administrateur.'
+            ];
+        }
+        
+        try {
+            // Récupérer les produits avec un stock faible (5 ou moins)
+            $db = Database::getInstance()->getConnection();
+            $query = "SELECT * FROM produits WHERE stock <= 5 ORDER BY stock ASC LIMIT :limite";
+            
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':limite', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $produits = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'success' => true,
+                'produits' => $produits
+            ];
+        } catch(PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erreur de base de données: ' . $e->getMessage()
             ];
         }
     }

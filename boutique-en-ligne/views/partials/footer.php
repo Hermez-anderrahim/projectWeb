@@ -73,5 +73,11 @@
             </div>
 </footer>
 </div>
+
+<script src="/boutique-en-ligne/js/utils.js"></script>
+<script src="/boutique-en-ligne/js/api.js"></script>
+<script src="/boutique-en-ligne/assets/js/main.js"></script>
+<script src="/boutique-en-ligne/assets/js/auth.js"></script>
+<script src="/boutique-en-ligne/js/hello.js"></script>
 </body> 
 </html>

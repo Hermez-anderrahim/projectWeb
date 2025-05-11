@@ -3,7 +3,9 @@
 class Auth {
     // Vérifier si l'utilisateur est authentifié
     public static function verifierAuthentification($admin_requis = false) {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         
         if(!isset($_SESSION['utilisateur'])) {
             return [
@@ -39,9 +41,9 @@ class Auth {
             [
                 'expires' => time() + $expiration,
                 'path' => '/',
-                'secure' => true,
+                'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on', // Only use secure for HTTPS
                 'httponly' => true,
-                'samesite' => 'Strict'
+                'samesite' => 'Lax' // Changed from Strict to Lax for better compatibility
             ]
         );
     }

@@ -23,8 +23,38 @@ class CommandeController {
         }
         
         try {
-            // Créer la commande
-            $id_commande = $this->commande->creerDepuisPanier($resultat_auth['utilisateur']['id']);
+            // Récupérer les données de la requête
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            // Valider les données de livraison
+            $adresseLivraison = [
+                'nom' => $data['nom'] ?? null,
+                'prenom' => $data['prenom'] ?? null,
+                'adresse' => $data['adresse'] ?? null,
+                'code_postal' => $data['code_postal'] ?? null,
+                'ville' => $data['ville'] ?? null,
+                'telephone' => $data['telephone'] ?? null
+            ];
+            
+            // Valider les données de paiement
+            $methodePaiement = $data['payment_method'] ?? 'card';
+            
+            // Simuler le traitement de paiement 
+            $paiementReussi = $this->traiterPaiement($data);
+            
+            if (!$paiementReussi) {
+                return [
+                    'success' => false,
+                    'message' => 'Erreur lors du traitement du paiement. Veuillez vérifier vos informations bancaires.'
+                ];
+            }
+            
+            // Créer la commande avec les informations de livraison
+            $id_commande = $this->commande->creerDepuisPanier(
+                $resultat_auth['utilisateur']['id'],
+                $adresseLivraison,
+                $methodePaiement
+            );
             
             if($id_commande) {
                 return [
@@ -43,7 +73,46 @@ class CommandeController {
                 'success' => false,
                 'message' => 'Erreur de base de données: ' . $e->getMessage()
             ];
+        } catch(Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Erreur: ' . $e->getMessage()
+            ];
         }
+    }
+    
+    // Simuler le traitement du paiement
+    private function traiterPaiement($data) {
+        // Dans un environnement de production, on intégrerait ici 
+        // un service de paiement comme Stripe, PayPal, etc.
+        
+        // Vérifications basiques pour la simulation
+        if ($data['payment_method'] === 'card') {
+            // Vérification basique du numéro de carte (simulation)
+            $cardNumber = $data['card_number'] ?? '';
+            $cardExpiry = $data['card_expiry'] ?? '';
+            $cardCVV = $data['card_cvv'] ?? '';
+            $cardName = $data['card_name'] ?? '';
+            
+            // Vérifier que les champs obligatoires sont remplis
+            if (empty($cardNumber) || empty($cardExpiry) || empty($cardCVV) || empty($cardName)) {
+                return false;
+            }
+            
+            // Vérifier que le numéro de carte a au moins 16 chiffres (simulation)
+            $cardNumber = preg_replace('/\D/', '', $cardNumber);
+            if (strlen($cardNumber) < 15) {
+                return false;
+            }
+            
+            // Ici, nous simulons toujours un paiement réussi si les vérifications basiques passent
+            return true;
+        } elseif ($data['payment_method'] === 'paypal') {
+            // Simulation de paiement PayPal réussi
+            return true;
+        }
+        
+        return false;
     }
     
     // Récupérer les détails d'une commande
@@ -247,6 +316,42 @@ class CommandeController {
             return [
                 'success' => false,
                 'message' => 'Erreur lors de la mise à jour du statut de la commande.'
+            ];
+        }
+    }
+
+    // Méthode pour l'administrateur : récupérer les commandes récentes
+    public function getRecentOrders($limit = 5) {
+        // Vérifier si l'utilisateur est connecté en tant qu'admin
+        $resultat_auth = Auth::verifierAuthentification(true);
+        
+        if(!$resultat_auth['authentifie']) {
+            return [
+                'success' => false,
+                'message' => 'Non autorisé. Vous devez être administrateur.'
+            ];
+        }
+        
+        try {
+            $query = "SELECT c.*, u.nom, u.prenom, u.email 
+                      FROM commandes c 
+                      JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur 
+                      ORDER BY c.date_commande DESC 
+                      LIMIT :limite";
+            
+            $stmt = Database::getInstance()->getConnection()->prepare($query);
+            $stmt->bindParam(':limite', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            $commandes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'success' => true,
+                'commandes' => $commandes
+            ];
+        } catch(PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erreur de base de données: ' . $e->getMessage()
             ];
         }
     }
