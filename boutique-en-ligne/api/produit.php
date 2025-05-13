@@ -58,8 +58,10 @@ try {
                 $categorie = $_GET['categorie'] ?? null;
                 $prix_min = isset($_GET['prix_min']) ? floatval($_GET['prix_min']) : null;
                 $prix_max = isset($_GET['prix_max']) ? floatval($_GET['prix_max']) : null;
+                $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+                $limite = isset($_GET['limite']) ? intval($_GET['limite']) : 10;
                 
-                echo json_encode($controller->rechercherProduits($terme, $categorie, $prix_min, $prix_max));
+                echo json_encode($controller->rechercherProduits($terme, $categorie, $prix_min, $prix_max, $page, $limite));
             } else {
                 // GET /api/produit - Récupérer tous les produits avec pagination
                 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;

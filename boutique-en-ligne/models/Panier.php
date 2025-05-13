@@ -132,7 +132,8 @@ class Panier {
             return [];
         }
         
-        $query = "SELECT ep.id_element, ep.id_produit, ep.quantite, p.nom, p.prix, p.image_url, (ep.quantite * p.prix) as sous_total 
+        $query = "SELECT ep.id_element, ep.id_produit, ep.quantite, p.nom, p.prix, p.image_url, p.stock, p.categorie,
+                  (ep.quantite * p.prix) as sous_total, p.prix as prix_unitaire 
                   FROM elements_panier ep 
                   JOIN produits p ON ep.id_produit = p.id_produit 
                   WHERE ep.id_panier = :id_panier";

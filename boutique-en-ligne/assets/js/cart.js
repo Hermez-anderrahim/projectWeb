@@ -11,9 +11,23 @@ async function loadCart() {
 
   try {
     const response = await CartAPI.getContents();
-    const cart = response.data;
 
-    if (cart.items.length === 0) {
+    if (!response.success) {
+      cartContainer.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-circle"></i> ${
+            response.message ||
+            "Une erreur est survenue lors du chargement du panier."
+          }
+        </div>
+      `;
+      if (cartActions) cartActions.style.display = "none";
+      return;
+    }
+
+    const cart = response.panier;
+
+    if (!cart || !cart.contenu || cart.contenu.length === 0) {
       cartContainer.innerHTML = `
                 <div class="empty-cart">
                     <i class="fas fa-shopping-cart fa-4x"></i>
@@ -25,7 +39,7 @@ async function loadCart() {
       return;
     }
 
-    let totalPrice = 0;
+    let totalPrice = parseFloat(cart.total) || 0;
     let cartHTML = `
             <table class="cart-table">
                 <thead>
@@ -40,40 +54,40 @@ async function loadCart() {
                 <tbody>
         `;
 
-    cart.items.forEach((item) => {
-      const itemTotal = item.prix * item.quantite;
-      totalPrice += itemTotal;
+    cart.contenu.forEach((item) => {
+      const itemTotal = parseFloat(item.sous_total) || 0;
+      const price = parseFloat(item.prix_unitaire) || 0;
 
       cartHTML += `
                 <tr>
                     <td>
                         <div class="cart-product">
-                            <img src="/api/placeholder/100/100" alt="${
-                              item.nom
-                            }" width="60">
+                            <img src="${
+                              item.image_url || "/assets/images/placeholder.png"
+                            }" alt="${item.nom}" width="60">
                             <div>
                                 <h4>${item.nom}</h4>
                             </div>
                         </div>
                     </td>
-                    <td>${item.prix.toFixed(2)} €</td>
+                    <td>${price.toFixed(2)} €</td>
                     <td>
                         <div class="quantity-controls">
                             <button class="quantity-btn minus" data-id="${
-                              item.produit_id
+                              item.id_produit
                             }">-</button>
                             <input type="number" class="quantity-input" value="${
                               item.quantite
-                            }" min="1" data-id="${item.produit_id}">
+                            }" min="1" data-id="${item.id_produit}">
                             <button class="quantity-btn plus" data-id="${
-                              item.produit_id
+                              item.id_produit
                             }">+</button>
                         </div>
                     </td>
                     <td>${itemTotal.toFixed(2)} €</td>
                     <td>
                         <button class="btn btn-danger remove-item" data-id="${
-                          item.produit_id
+                          item.id_produit
                         }">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -112,11 +126,19 @@ async function loadCart() {
         if (quantity < 1) quantity = 1;
 
         try {
-          await CartAPI.updateQuantity(productId, quantity);
-          loadCart();
-          updateCartCount();
+          const result = await CartAPI.updateQuantity(productId, quantity);
+          if (result.success) {
+            loadCart();
+            updateCartCount();
+          } else {
+            alert(
+              "Erreur: " +
+                (result.message || "Impossible de mettre à jour la quantité")
+            );
+          }
         } catch (error) {
-          alert("Erreur: " + error.message);
+          console.error("Error updating quantity:", error);
+          alert("Erreur: Une erreur est survenue lors de la mise à jour");
         }
       });
     });
@@ -131,11 +153,19 @@ async function loadCart() {
         const quantity = parseInt(input.value) + 1;
 
         try {
-          await CartAPI.updateQuantity(productId, quantity);
-          loadCart();
-          updateCartCount();
+          const result = await CartAPI.updateQuantity(productId, quantity);
+          if (result.success) {
+            loadCart();
+            updateCartCount();
+          } else {
+            alert(
+              "Erreur: " +
+                (result.message || "Impossible de mettre à jour la quantité")
+            );
+          }
         } catch (error) {
-          alert("Erreur: " + error.message);
+          console.error("Error updating quantity:", error);
+          alert("Erreur: Une erreur est survenue lors de la mise à jour");
         }
       });
     });
@@ -152,11 +182,19 @@ async function loadCart() {
         }
 
         try {
-          await CartAPI.updateQuantity(productId, quantity);
-          loadCart();
-          updateCartCount();
+          const result = await CartAPI.updateQuantity(productId, quantity);
+          if (result.success) {
+            loadCart();
+            updateCartCount();
+          } else {
+            alert(
+              "Erreur: " +
+                (result.message || "Impossible de mettre à jour la quantité")
+            );
+          }
         } catch (error) {
-          alert("Erreur: " + error.message);
+          console.error("Error updating quantity:", error);
+          alert("Erreur: Une erreur est survenue lors de la mise à jour");
         }
       });
     });
@@ -167,11 +205,19 @@ async function loadCart() {
         const productId = this.getAttribute("data-id");
 
         try {
-          await CartAPI.removeItem(productId);
-          loadCart();
-          updateCartCount();
+          const result = await CartAPI.removeItem(productId);
+          if (result.success) {
+            loadCart();
+            updateCartCount();
+          } else {
+            alert(
+              "Erreur: " +
+                (result.message || "Impossible de supprimer l'article")
+            );
+          }
         } catch (error) {
-          alert("Erreur: " + error.message);
+          console.error("Error removing item:", error);
+          alert("Erreur: Une erreur est survenue lors de la suppression");
         }
       });
     });
@@ -182,15 +228,54 @@ async function loadCart() {
       .addEventListener("click", async function () {
         if (confirm("Êtes-vous sûr de vouloir vider votre panier ?")) {
           try {
-            await CartAPI.clear();
-            loadCart();
-            updateCartCount();
+            const result = await CartAPI.clear();
+            if (result.success) {
+              loadCart();
+              updateCartCount();
+            } else {
+              alert(
+                "Erreur: " + (result.message || "Impossible de vider le panier")
+              );
+            }
           } catch (error) {
-            alert("Erreur: " + error.message);
+            console.error("Error clearing cart:", error);
+            alert("Erreur: Une erreur est survenue lors du vidage du panier");
           }
         }
       });
   } catch (error) {
-    cartContainer.innerHTML = `<p>Erreur lors du chargement du panier: ${error.message}</p>`;
+    console.error("Error loading cart:", error);
+    cartContainer.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i> Une erreur est survenue lors du chargement du panier.
+      </div>
+    `;
+    if (cartActions) cartActions.style.display = "none";
+  }
+}
+
+// Function to update cart count in the navigation
+function updateCartCount() {
+  try {
+    CartAPI.getContents()
+      .then((response) => {
+        if (response.success && response.panier) {
+          const count = response.panier.nombre_articles || 0;
+          const cartCountElements = document.querySelectorAll(".cart-count");
+          cartCountElements.forEach((element) => {
+            element.textContent = count;
+
+            // Show/hide badge based on count
+            if (count > 0) {
+              element.classList.add("has-items");
+            } else {
+              element.classList.remove("has-items");
+            }
+          });
+        }
+      })
+      .catch((error) => console.error("Error updating cart count:", error));
+  } catch (error) {
+    console.error("Error in updateCartCount:", error);
   }
 }

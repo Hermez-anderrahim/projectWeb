@@ -69,13 +69,13 @@ try {
         case 'POST':
             if($id_or_action === 'creer') {
                 // POST /api/commande/creer - Créer une nouvelle commande
-                echo json_encode($controller->creerCommande());
+                echo json_encode($controller->creerCommande($data));
             } elseif($id_or_action === 'annuler' && is_numeric($param_secondaire)) {
                 // POST /api/commande/annuler/{id} - Annuler une commande
                 $raison = $data['raison'] ?? null;
                 echo json_encode($controller->annulerCommande($param_secondaire, $raison));
             } elseif($id_or_action === 'admin' && $param_secondaire === 'statut' && isset($request[2]) && is_numeric($request[2])) {
-                
+                // POST /api/commande/admin/statut/{id} - Modifier le statut d'une commande (admin seulement)
                 $nouveau_statut = $data['statut'] ?? null;
                 if(!$nouveau_statut) {
                     echo json_encode(Response::error('Statut manquant', 400));
@@ -84,9 +84,9 @@ try {
                 echo json_encode($controller->modifierStatutCommande($request[2], $nouveau_statut));
             } else {
                 // If no specific action is detected but we have a POST request with data
-                // This handles the case when OrderAPI.create(orderData) is called
+                // This handles the case when OrderAPI.create(orderData) is called directly
                 if (!$id_or_action && $data) {
-                    echo json_encode($controller->creerCommande());
+                    echo json_encode($controller->creerCommande($data));
                 } else {
                     echo json_encode(Response::error('Action non reconnue ou paramètres manquants', 400));
                 }

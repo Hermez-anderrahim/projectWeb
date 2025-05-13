@@ -128,6 +128,7 @@ img {
   transition: all var(--transition-fast);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin: var(--spacing-xs);
 }
 
 .btn i {
@@ -189,7 +190,7 @@ img {
 }
 
 .form-group {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-row {
@@ -750,6 +751,17 @@ mobile-nav {
   .footer-content {
     grid-template-columns: 1fr;
   }
+
+  .section-spacing {
+    margin-bottom: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+  }
+
+  .hero-section,
+  .categories-section,
+  .products-section {
+    margin: var(--spacing-xl) 0;
+  }
 }
 
 /* Very small screens (Mobile Portrait) */
@@ -1022,17 +1034,22 @@ mobile-nav {
 
 .product-info {
   flex: 1;
+  padding: var(--spacing-md);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-name {
   font-size: 1rem;
   font-weight: 600;
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
 }
 
 .product-category {
   font-size: 0.875rem;
   color: var(--grey-color);
+  margin-bottom: var(--spacing-sm);
 }
 
 .price-cell {
@@ -1235,8 +1252,10 @@ mobile-nav {
 .cart-item {
   display: flex;
   align-items: center;
-  padding: var(--spacing-sm) 0;
+  padding: var(--spacing-md) 0;
   border-bottom: 1px solid var(--light-grey);
+  padding: var(--spacing-md) 0;
+  margin-bottom: var(--spacing-sm);
 }
 
 .cart-item:last-child {
@@ -1407,7 +1426,7 @@ mobile-nav {
 
 .order-actions {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var (--spacing-sm);
   justify-content: flex-end;
 }
 .user-actions {
@@ -1800,5 +1819,78 @@ mobile-nav {
 @media screen and (max-width: 576px) {
   .profile-links ul {
     flex-direction: column;
+  }
+}
+
+/* Section Spacing */
+.section-spacing {
+  margin-bottom: var(--spacing-xxl);
+  padding-top: var(--spacing-xl);
+}
+
+.hero-section {
+  margin-bottom: var(--spacing-xxl);
+  padding: var(--spacing-xl) 0;
+}
+
+.categories-section {
+  margin: var(--spacing-xxl) 0;
+}
+
+.products-section {
+  margin: var(--spacing-xxl) 0;
+}
+
+.section-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Improve spacing in product cards */
+.product-info {
+  padding: var(--spacing-md);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-name {
+  margin-bottom: var(--spacing-sm);
+}
+
+.product-category {
+  margin-bottom: var(--spacing-sm);
+}
+
+.product-price {
+  margin-top: var(--spacing-sm);
+}
+
+/* Add spacing between form elements */
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Improve cart spacing */
+.cart-item {
+  padding: var(--spacing-md) 0;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Improve button spacing */
+.btn {
+  margin: var(--spacing-xs);
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 768px) {
+  .section-spacing {
+    margin-bottom: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+  }
+
+  .hero-section,
+  .categories-section,
+  .products-section {
+    margin: var(--spacing-xl) 0;
   }
 }

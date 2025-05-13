@@ -11,7 +11,7 @@ class CommandeController {
     }
     
     // Créer une nouvelle commande à partir du panier de l'utilisateur
-    public function creerCommande() {
+    public function creerCommande($donnees = null) {
         // Vérifier si l'utilisateur est connecté
         $resultat_auth = Auth::verifierAuthentification();
         
@@ -23,24 +23,26 @@ class CommandeController {
         }
         
         try {
-            // Récupérer les données de la requête
-            $data = json_decode(file_get_contents("php://input"), true);
+            // Si aucune donnée n'est fournie, on la récupère de la requête
+            if (!$donnees) {
+                $donnees = json_decode(file_get_contents("php://input"), true);
+            }
             
             // Valider les données de livraison
             $adresseLivraison = [
-                'nom' => $data['nom'] ?? null,
-                'prenom' => $data['prenom'] ?? null,
-                'adresse' => $data['adresse'] ?? null,
-                'code_postal' => $data['code_postal'] ?? null,
-                'ville' => $data['ville'] ?? null,
-                'telephone' => $data['telephone'] ?? null
+                'nom' => $donnees['nom'] ?? null,
+                'prenom' => $donnees['prenom'] ?? null,
+                'adresse' => $donnees['adresse'] ?? null,
+                'code_postal' => $donnees['code_postal'] ?? null,
+                'ville' => $donnees['ville'] ?? null,
+                'telephone' => $donnees['telephone'] ?? null
             ];
             
             // Valider les données de paiement
-            $methodePaiement = $data['payment_method'] ?? 'card';
+            $methodePaiement = $donnees['payment_method'] ?? 'card';
             
             // Simuler le traitement de paiement 
-            $paiementReussi = $this->traiterPaiement($data);
+            $paiementReussi = $this->traiterPaiement($donnees);
             
             if (!$paiementReussi) {
                 return [

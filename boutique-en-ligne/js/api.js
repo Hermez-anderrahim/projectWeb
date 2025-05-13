@@ -67,9 +67,18 @@ const ProductAPI = {
     return fetchAPI(url);
   },
   getById: (id) => fetchAPI(`/api/produit.php/${id}`),
-  search: (term, category = null, minPrice = null, maxPrice = null) => {
+  search: (
+    term,
+    category = null,
+    page = 1,
+    limit = 12,
+    minPrice = null,
+    maxPrice = null
+  ) => {
     let url = `/api/produit.php/recherche?terme=${term}`;
     if (category) url += `&categorie=${category}`;
+    if (page) url += `&page=${page}`;
+    if (limit) url += `&limite=${limit}`;
     if (minPrice) url += `&prix_min=${minPrice}`;
     if (maxPrice) url += `&prix_max=${maxPrice}`;
     return fetchAPI(url);
@@ -83,6 +92,13 @@ const ProductAPI = {
 // Cart API
 const CartAPI = {
   getContents: () => fetchAPI("/api/panier.php"),
+  // Add compatibility method for legacy code
+  getCart: function () {
+    console.warn(
+      "CartAPI.getCart() is deprecated, use CartAPI.getContents() instead"
+    );
+    return this.getContents();
+  },
   addItem: (productId, quantity = 1) =>
     fetchAPI(`/api/panier.php/ajouter/${productId}`, "POST", {
       quantite: quantity,
@@ -101,6 +117,13 @@ const OrderAPI = {
   getHistory: () => fetchAPI("/api/commande.php"),
   getDetails: (id) => fetchAPI(`/api/commande.php/${id}`),
   create: (orderData) => fetchAPI("/api/commande.php/creer", "POST", orderData),
+  // Add compatibility method for legacy code
+  createOrder: function (orderData) {
+    console.warn(
+      "OrderAPI.createOrder() is deprecated, use OrderAPI.create() instead"
+    );
+    return this.create(orderData);
+  },
   cancel: (id, reason) =>
     fetchAPI(`/api/commande.php/annuler/${id}`, "POST", { raison: reason }),
   // Admin functions

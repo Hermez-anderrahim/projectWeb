@@ -47,13 +47,17 @@ class ProduitController {
     }
     
     // Rechercher des produits
-    public function rechercherProduits($terme, $categorie = null, $prix_min = null, $prix_max = null) {
-        $produits = $this->produit->rechercher($terme, $categorie, $prix_min, $prix_max);
+    public function rechercherProduits($terme, $categorie = null, $prix_min = null, $prix_max = null, $page = 1, $limite = 10) {
+        $produits = $this->produit->rechercher($terme, $categorie, $prix_min, $prix_max, $page, $limite);
+        $totalCount = $this->produit->compterRecherche($terme, $categorie, $prix_min, $prix_max);
         
         return [
             'success' => true,
             'produits' => $produits,
-            'nb_resultats' => count($produits)
+            'nb_resultats' => count($produits),
+            'total' => $totalCount,
+            'page' => $page,
+            'limite' => $limite
         ];
     }
     

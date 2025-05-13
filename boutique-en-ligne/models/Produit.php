@@ -124,7 +124,54 @@ class Produit {
     }
     
     // Rechercher des produits
-    public function rechercher($terme, $categorie = null, $prix_min = null, $prix_max = null) {
+    public function rechercher($terme, $categorie = null, $prix_min = null, $prix_max = null, $page = 1, $limite = 10) {
+        $conditions = [];
+        $params = [];
+        $offset = ($page - 1) * $limite;
+        
+        if($terme) {
+            $conditions[] = "(nom LIKE :terme OR description LIKE :terme)";
+            $params[':terme'] = "%$terme%";
+        }
+        
+        if($categorie) {
+            $conditions[] = "categorie = :categorie";
+            $params[':categorie'] = $categorie;
+        }
+        
+        if($prix_min) {
+            $conditions[] = "prix >= :prix_min";
+            $params[':prix_min'] = $prix_min;
+        }
+        
+        if($prix_max) {
+            $conditions[] = "prix <= :prix_max";
+            $params[':prix_max'] = $prix_max;
+        }
+        
+        $where = count($conditions) > 0 ? "WHERE " . implode(" AND ", $conditions) : "";
+        
+        $query = "SELECT * FROM produits $where ORDER BY date_ajout DESC LIMIT :limite OFFSET :offset";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        
+        foreach($params as $key => $value) {
+            if(is_int($value)) {
+                $stmt->bindValue($key, $value, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($key, $value);
+            }
+        }
+        
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+    
+    // Compter le nombre total de résultats d'une recherche
+    public function compterRecherche($terme, $categorie = null, $prix_min = null, $prix_max = null) {
         $conditions = [];
         $params = [];
         
@@ -150,17 +197,22 @@ class Produit {
         
         $where = count($conditions) > 0 ? "WHERE " . implode(" AND ", $conditions) : "";
         
-        $query = "SELECT * FROM produits $where ORDER BY date_ajout DESC";
+        $query = "SELECT COUNT(*) as total FROM produits $where";
         
         $stmt = $this->conn->prepare($query);
         
         foreach($params as $key => $value) {
-            $stmt->bindValue($key, $value);
+            if(is_int($value)) {
+                $stmt->bindValue($key, $value, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($key, $value);
+            }
         }
         
         $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        return $stmt->fetchAll();
+        return $result['total'];
     }
 }
 ?>

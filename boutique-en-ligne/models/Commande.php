@@ -20,48 +20,88 @@ class Commande {
         $this->conn = $this->db->getConnection();
     }
     
-    // Créer une nouvelle commande à partir du panier
+    // Créer une nouvelle commande à partir du panier de l'utilisateur
     public function creerDepuisPanier($id_utilisateur, $adresseLivraison = null, $methodePaiement = 'card') {
         $id_commande = null;
         
         try {
-            // Appeler la procédure stockée pour finaliser la commande
-            $this->conn->beginTransaction();
+            // Vérifier que l'utilisateur a un panier avec des articles
+            $panier = new Panier();
+            $id_panier = $panier->getOuCreerPourUtilisateur($id_utilisateur);
             
-            $stmt = $this->conn->prepare("CALL finaliser_commande(?, @id_commande)");
-            $stmt->bindParam(1, $id_utilisateur, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            $stmt = $this->conn->query("SELECT @id_commande as id_commande");
-            $result = $stmt->fetch();
-            
-            if($result && isset($result['id_commande'])) {
-                $id_commande = $result['id_commande'];
-                
-                // Enregistrer les informations de livraison
-                if ($adresseLivraison) {
-                    $this->sauvegarderInfosLivraison($id_commande, $adresseLivraison);
-                }
-                
-                // Enregistrer la méthode de paiement
-                $this->sauvegarderMethodePaiement($id_commande, $methodePaiement);
-                
-                // Mettre à jour le statut de la commande à "validee" au lieu de "en_attente"
-                $this->updateStatut($id_commande, 'validee');
-                
-                $this->conn->commit();
-                
-                $this->id_commande = $id_commande;
-                $this->id_utilisateur = $id_utilisateur;
-                $this->adresse_livraison = $adresseLivraison;
-                $this->methode_paiement = $methodePaiement;
-                return $id_commande;
+            if (!$id_panier) {
+                return false;
             }
             
-            $this->conn->rollBack();
-            return false;
+            $contenu_panier = $panier->getContenu();
+            
+            if (empty($contenu_panier)) {
+                return false;
+            }
+            
+            // Commencer une transaction pour garantir l'atomicité
+            $this->conn->beginTransaction();
+            
+            // Créer la commande
+            $query = "INSERT INTO commandes (id_utilisateur, statut, total) 
+                      VALUES (:id_utilisateur, 'en_attente', :total)";
+            
+            $total = $panier->calculerTotal();
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_utilisateur', $id_utilisateur);
+            $stmt->bindParam(':total', $total);
+            $stmt->execute();
+            
+            $id_commande = $this->conn->lastInsertId();
+            
+            // Ajouter les produits à la commande
+            foreach ($contenu_panier as $item) {
+                $query = "INSERT INTO details_commande (id_commande, id_produit, quantite, prix_unitaire) 
+                          VALUES (:id_commande, :id_produit, :quantite, :prix_unitaire)";
+                
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':id_commande', $id_commande);
+                $stmt->bindParam(':id_produit', $item['id_produit']);
+                $stmt->bindParam(':quantite', $item['quantite']);
+                $stmt->bindParam(':prix_unitaire', $item['prix_unitaire']);
+                $stmt->execute();
+                
+                // Mettre à jour le stock
+                $query = "UPDATE produits SET stock = stock - :quantite WHERE id_produit = :id_produit";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':quantite', $item['quantite']);
+                $stmt->bindParam(':id_produit', $item['id_produit']);
+                $stmt->execute();
+            }
+            
+            // Enregistrer les informations de livraison si fournies
+            if ($adresseLivraison) {
+                $this->sauvegarderInfosLivraison($id_commande, $adresseLivraison);
+            }
+            
+            // Enregistrer la méthode de paiement
+            $this->sauvegarderMethodePaiement($id_commande, $methodePaiement);
+            
+            // Mettre à jour le statut de la commande à "validee" 
+            $this->updateStatut($id_commande, 'validee');
+            
+            // Vider le panier de l'utilisateur
+            $panier->vider();
+            
+            // Valider la transaction
+            $this->conn->commit();
+            
+            $this->id_commande = $id_commande;
+            $this->id_utilisateur = $id_utilisateur;
+            $this->adresse_livraison = $adresseLivraison;
+            $this->methode_paiement = $methodePaiement;
+            
+            return $id_commande;
         } catch(PDOException $e) {
-            $this->conn->rollBack();
+            // En cas d'erreur, annuler la transaction
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
             throw $e;
         }
     }
