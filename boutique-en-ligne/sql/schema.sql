@@ -27,6 +27,19 @@ CREATE TABLE IF NOT EXISTS produits (
     date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create a table for storing product images in the database
+CREATE TABLE IF NOT EXISTS produit_images (
+    id_image INT AUTO_INCREMENT PRIMARY KEY,
+    id_produit INT NOT NULL,
+    image_data MEDIUMBLOB NOT NULL,
+    image_type VARCHAR(50) NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
+    titre VARCHAR(100),
+    ordre INT DEFAULT 0,
+    date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_produit) REFERENCES produits(id_produit) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Table des paniers
 CREATE TABLE IF NOT EXISTS paniers (
     id_panier INT AUTO_INCREMENT PRIMARY KEY,

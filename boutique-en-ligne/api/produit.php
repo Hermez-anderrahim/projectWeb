@@ -62,6 +62,9 @@ try {
                 $limite = isset($_GET['limite']) ? intval($_GET['limite']) : 10;
                 
                 echo json_encode($controller->rechercherProduits($terme, $categorie, $prix_min, $prix_max, $page, $limite));
+            } elseif($id_or_action === 'images' && isset($request[1]) && is_numeric($request[1])) {
+                // GET /api/produit/images/{id_produit} - Récupérer toutes les images d'un produit
+                echo json_encode($controller->getImagesProduit($request[1]));
             } else {
                 // GET /api/produit - Récupérer tous les produits avec pagination
                 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
@@ -73,6 +76,17 @@ try {
             break;
             
         case 'POST':
+            // Check for image operations
+            if ($id_or_action === 'images' && isset($request[1]) && is_numeric($request[1])) {
+                // POST /api/produit/images/{id_produit} - Ajouter une image à un produit
+                echo json_encode($controller->ajouterImageProduit($request[1], $data));
+                break;
+            } elseif ($id_or_action === 'set_primary' && isset($request[1]) && is_numeric($request[1])) {
+                // POST /api/produit/set_primary/{id_image} - Définir une image comme principale
+                echo json_encode($controller->definirImagePrincipale($request[1]));
+                break;
+            }
+            
             // POST /api/produit - Ajouter un nouveau produit (admin seulement)
             echo json_encode($controller->ajouterProduit($data));
             break;
@@ -87,6 +101,12 @@ try {
             break;
             
         case 'DELETE':
+            if ($id_or_action === 'images' && isset($request[1]) && is_numeric($request[1])) {
+                // DELETE /api/produit/images/{id_image} - Supprimer une image
+                echo json_encode($controller->supprimerImageProduit($request[1]));
+                break;
+            }
+            
             if(!is_numeric($id_or_action)) {
                 echo json_encode(Response::error('ID de produit non valide ou manquant', 400));
                 break;

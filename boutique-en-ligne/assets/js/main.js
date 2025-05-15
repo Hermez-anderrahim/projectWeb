@@ -58,3 +58,14 @@ async function updateCartCount() {
     console.error("Erreur lors de la récupération du panier:", error);
   }
 }
+
+// Add event listener for scroll to handle navbar styling
+window.addEventListener("scroll", function () {
+  const header = document.querySelector(".main-header");
+
+  if (window.scrollY > 50) {
+    header.classList.add("scrolled");
+  } else {
+    header.classList.remove("scrolled");
+  }
+});

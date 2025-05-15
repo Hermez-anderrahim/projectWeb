@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/views/auth/auth-style.css">
+<link rel="stylesheet" href="/views/auth/auth-styles.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <!-- Add the API.js script before using UserAPI -->
@@ -6,7 +6,7 @@
 
 <main class="container">
     <div class="auth-container">
-        <div class="auth-box register-box">
+        <div class="auth-box">
             <h1 class="auth-title">Inscription</h1>
             
             <div id="register-message"></div>
@@ -107,19 +107,11 @@ document.addEventListener('DOMContentLoaded', function() {
     registerForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const userData = {
-            nom: document.getElementById('nom').value,
-            prenom: document.getElementById('prenom').value,
-            email: document.getElementById('email').value,
-            mot_de_passe: document.getElementById('mot_de_passe').value,
-            adresse: document.getElementById('adresse').value,
-            telephone: document.getElementById('telephone').value
-        };
-        
+        const passwordValue = document.getElementById('mot_de_passe').value;
         const passwordConfirm = document.getElementById('password_confirm').value;
         
         // Validate passwords match
-        if (userData.mot_de_passe !== passwordConfirm) {
+        if (passwordValue !== passwordConfirm) {
             messageContainer.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Les mots de passe ne correspondent pas.</div>';
             return;
         }
@@ -128,14 +120,37 @@ document.addEventListener('DOMContentLoaded', function() {
         registerForm.classList.add('processing');
         
         try {
-            const data = await UserAPI.register(userData);
+            // Send the registration request directly to ensure correct parameter names
+            const response = await fetch('/api/utilisateur.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'inscrire',
+                    nom: document.getElementById('nom').value,
+                    prenom: document.getElementById('prenom').value,
+                    email: document.getElementById('email').value,
+                    password: passwordValue, // Using the correct parameter name expected by the API
+                    adresse: document.getElementById('adresse').value,
+                    telephone: document.getElementById('telephone').value
+                }),
+                credentials: 'include'
+            });
             
-            messageContainer.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Inscription réussie ! Vous allez être redirigé vers la page de connexion...</div>';
+            const data = await response.json();
             
-            // Redirect after successful registration
-            setTimeout(() => {
-                window.location.href = '?route=login';
-            }, 2000);
+            if (data.success) {
+                messageContainer.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Inscription réussie ! Vous allez être redirigé vers la page de connexion...</div>';
+                
+                // Redirect after successful registration
+                setTimeout(() => {
+                    window.location.href = '?route=login';
+                }, 2000);
+            } else {
+                registerForm.classList.remove('processing');
+                messageContainer.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> ${data.message || 'Erreur lors de l\'inscription'}</div>`;
+            }
             
         } catch (error) {
             registerForm.classList.remove('processing');

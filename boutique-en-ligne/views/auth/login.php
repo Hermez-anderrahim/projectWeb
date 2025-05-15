@@ -90,15 +90,33 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.classList.add('processing');
         
         try {
-            const data = await UserAPI.login(email, mot_de_passe);
+            // Send the login request to the API
+            const response = await fetch('/api/utilisateur.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'connecter',
+                    email: email,
+                    password: mot_de_passe  
+                }),
+                credentials: 'include'  
+            });
             
-            messageContainer.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Connexion réussie ! Redirection en cours...</div>';
+            const data = await response.json();
             
-            // Redirect after successful login
-            setTimeout(() => {
-                window.location.href = '?route=home';
-            }, 1500);
-            
+            if (data.success) {
+                messageContainer.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> Connexion réussie ! Redirection en cours...</div>';
+                
+                // Redirect after successful login
+                setTimeout(() => {
+                    window.location.href = '?route=home';
+                }, 1500);
+            } else {
+                loginForm.classList.remove('processing');
+                messageContainer.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> ${data.message || 'Erreur de connexion'}</div>`;
+            }
         } catch (error) {
             loginForm.classList.remove('processing');
             messageContainer.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> ${error.message || 'Erreur de connexion'}</div>`;

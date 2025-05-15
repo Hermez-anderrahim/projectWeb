@@ -30,19 +30,20 @@ class Commande {
             $id_panier = $panier->getOuCreerPourUtilisateur($id_utilisateur);
             
             if (!$id_panier) {
+                error_log("DEBUG [Commande::creerDepuisPanier] - Panier non trouvé pour utilisateur #$id_utilisateur");
                 return false;
             }
             
             $contenu_panier = $panier->getContenu();
             
             if (empty($contenu_panier)) {
+                error_log("DEBUG [Commande::creerDepuisPanier] - Panier vide pour utilisateur #$id_utilisateur");
                 return false;
             }
             
-            // Commencer une transaction pour garantir l'atomicité
-            $this->conn->beginTransaction();
-            
-            // Créer la commande
+            // N'utilisons pas de transactions pour l'instant pour résoudre le problème
+            // Créer la commande - Toujours en état "en_attente" initialement
+            error_log("DEBUG [Commande::creerDepuisPanier] - Création de la commande sans transaction");
             $query = "INSERT INTO commandes (id_utilisateur, statut, total) 
                       VALUES (:id_utilisateur, 'en_attente', :total)";
             
@@ -50,9 +51,20 @@ class Commande {
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':id_utilisateur', $id_utilisateur);
             $stmt->bindParam(':total', $total);
-            $stmt->execute();
+            
+            if (!$stmt->execute()) {
+                error_log("DEBUG [Commande::creerDepuisPanier] - Erreur lors de la création de la commande: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
             
             $id_commande = $this->conn->lastInsertId();
+            error_log("DEBUG [Commande::creerDepuisPanier] - Commande créée avec ID: $id_commande");
+            
+            // Créer les tables nécessaires si elles n'existent pas
+            $this->creerTableAdresseLivraisonSiNecessaire();
+            $this->creerTableMethodePaiementSiNecessaire();
+            
+            $success = true;
             
             // Ajouter les produits à la commande
             foreach ($contenu_panier as $item) {
@@ -64,44 +76,67 @@ class Commande {
                 $stmt->bindParam(':id_produit', $item['id_produit']);
                 $stmt->bindParam(':quantite', $item['quantite']);
                 $stmt->bindParam(':prix_unitaire', $item['prix_unitaire']);
-                $stmt->execute();
+                
+                if (!$stmt->execute()) {
+                    error_log("DEBUG [Commande::creerDepuisPanier] - Erreur lors de l'ajout du produit " . $item['id_produit'] . " à la commande: " . print_r($stmt->errorInfo(), true));
+                    $success = false;
+                    break;
+                }
                 
                 // Mettre à jour le stock
                 $query = "UPDATE produits SET stock = stock - :quantite WHERE id_produit = :id_produit";
                 $stmt = $this->conn->prepare($query);
                 $stmt->bindParam(':quantite', $item['quantite']);
                 $stmt->bindParam(':id_produit', $item['id_produit']);
-                $stmt->execute();
+                
+                if (!$stmt->execute()) {
+                    error_log("DEBUG [Commande::creerDepuisPanier] - Erreur lors de la mise à jour du stock pour le produit " . $item['id_produit'] . ": " . print_r($stmt->errorInfo(), true));
+                    $success = false;
+                    break;
+                }
+            }
+            
+            if (!$success) {
+                error_log("DEBUG [Commande::creerDepuisPanier] - Erreur lors de l'ajout des produits à la commande");
+                return false;
             }
             
             // Enregistrer les informations de livraison si fournies
             if ($adresseLivraison) {
-                $this->sauvegarderInfosLivraison($id_commande, $adresseLivraison);
+                if (!$this->sauvegarderInfosLivraison($id_commande, $adresseLivraison)) {
+                    error_log("DEBUG [Commande::creerDepuisPanier] - Erreur lors de l'enregistrement des informations de livraison");
+                    return false;
+                }
             }
             
             // Enregistrer la méthode de paiement
-            $this->sauvegarderMethodePaiement($id_commande, $methodePaiement);
+            if (!$this->sauvegarderMethodePaiement($id_commande, $methodePaiement)) {
+                error_log("DEBUG [Commande::creerDepuisPanier] - Erreur lors de l'enregistrement de la méthode de paiement");
+                return false;
+            }
             
-            // Mettre à jour le statut de la commande à "validee" 
-            $this->updateStatut($id_commande, 'validee');
+            // Ne plus mettre à jour le statut à "validee" comme avant
+            // La commande reste "en_attente" jusqu'à ce que l'administrateur la confirme
             
             // Vider le panier de l'utilisateur
-            $panier->vider();
-            
-            // Valider la transaction
-            $this->conn->commit();
+            if (!$panier->vider()) {
+                error_log("DEBUG [Commande::creerDepuisPanier] - Erreur lors du vidage du panier");
+                // Continuer quand même car la commande est créée
+            }
             
             $this->id_commande = $id_commande;
             $this->id_utilisateur = $id_utilisateur;
             $this->adresse_livraison = $adresseLivraison;
             $this->methode_paiement = $methodePaiement;
             
+            error_log("DEBUG [Commande::creerDepuisPanier] - Commande créée avec succès en statut 'en_attente'");
             return $id_commande;
         } catch(PDOException $e) {
-            // En cas d'erreur, annuler la transaction
-            if ($this->conn->inTransaction()) {
-                $this->conn->rollBack();
-            }
+            error_log("DEBUG [Commande::creerDepuisPanier] - Erreur PDO: " . $e->getMessage());
+            throw $e;
+        } catch(Exception $e) {
+            // Capturer d'autres types d'exceptions
+            error_log("DEBUG [Commande::creerDepuisPanier] - Erreur générale: " . $e->getMessage());
             throw $e;
         }
     }
@@ -299,18 +334,33 @@ class Commande {
     // Récupérer l'historique des commandes d'un utilisateur
     public function getHistoriqueCommandes($id_utilisateur) {
         try {
-            // Appeler la procédure stockée pour afficher l'historique des commandes
-            $resultats = $this->db->execProcedureMultipleResults('historique_commandes', [$id_utilisateur]);
+            // Méthode directe pour récupérer les commandes, sans utiliser de procédure stockée
+            error_log("DEBUG [Commande::getHistoriqueCommandes] - Fetching orders for user #$id_utilisateur");
             
-            if(count($resultats) >= 2) {
-                return [
-                    'commandes_actives' => $resultats[0],
-                    'commandes_annulees' => $resultats[1]
-                ];
+            // Récupérer toutes les commandes de l'utilisateur
+            $query = "SELECT c.*, 
+                        ca.nom, ca.prenom, ca.adresse, ca.code_postal, ca.ville, ca.telephone,
+                        cp.methode_paiement
+                      FROM commandes c
+                      LEFT JOIN commandes_adresses ca ON c.id_commande = ca.id_commande
+                      LEFT JOIN commandes_paiements cp ON c.id_commande = cp.id_commande
+                      WHERE c.id_utilisateur = :id_utilisateur
+                      ORDER BY c.date_commande DESC";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_utilisateur', $id_utilisateur);
+            $stmt->execute();
+            
+            $commandes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("DEBUG [Commande::getHistoriqueCommandes] - Found " . count($commandes) . " orders");
+            
+            if (empty($commandes)) {
+                return [];
             }
             
-            return null;
+            return $commandes;
         } catch(PDOException $e) {
+            error_log("DEBUG [Commande::getHistoriqueCommandes] - Error: " . $e->getMessage());
             throw $e;
         }
     }

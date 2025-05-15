@@ -3,12 +3,19 @@ const API_BASE_URL = ""; // Relative URL so it works on any domain
 
 // Utility function for API calls
 async function fetchAPI(endpoint, method = "GET", data = null) {
+  console.log(`DEBUG [fetchAPI] - Calling ${method} ${endpoint}`, data);
+
+  // Add timeout handling (10 seconds)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
   const options = {
     method,
     headers: {
       "Content-Type": "application/json",
     },
     credentials: "include", // Include cookies for session
+    signal: controller.signal,
   };
 
   if (data && (method === "POST" || method === "PUT")) {
@@ -16,16 +23,59 @@ async function fetchAPI(endpoint, method = "GET", data = null) {
   }
 
   try {
+    console.log(`DEBUG [fetchAPI] - Request options:`, options);
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-    const result = await response.json();
+    // Clear the timeout since the request completed
+    clearTimeout(timeoutId);
+
+    console.log(
+      `DEBUG [fetchAPI] - Response status:`,
+      response.status,
+      response.statusText
+    );
+
+    const responseHeaders = {};
+    response.headers.forEach((value, name) => {
+      responseHeaders[name] = value;
+    });
+    console.log(`DEBUG [fetchAPI] - Response headers:`, responseHeaders);
+
+    // Get text first to safely handle non-JSON responses
+    const responseText = await response.text();
+    console.log(`DEBUG [fetchAPI] - Raw response:`, responseText);
+
+    let result;
+    try {
+      // Only try to parse as JSON if there's content
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch (e) {
+      console.error(`DEBUG [fetchAPI] - JSON parse error:`, e);
+      throw new Error(
+        `Invalid JSON response: ${responseText.substring(0, 100)}...`
+      );
+    }
+
+    console.log(`DEBUG [fetchAPI] - Parsed response:`, result);
 
     if (!response.ok) {
+      console.error(`DEBUG [fetchAPI] - Error response:`, result);
       throw new Error(result.message || "Une erreur est survenue");
     }
 
     return result;
   } catch (error) {
-    console.error("API Error:", error);
+    // Clear the timeout in case of error
+    clearTimeout(timeoutId);
+
+    if (error.name === "AbortError") {
+      console.error(`DEBUG [fetchAPI] - Request timeout after 10 seconds`);
+      throw new Error(
+        "La requête a pris trop de temps à répondre. Veuillez réessayer."
+      );
+    }
+
+    console.error(`DEBUG [fetchAPI] - Exception:`, error);
     throw error;
   }
 }
@@ -112,7 +162,6 @@ const CartAPI = {
   clear: () => fetchAPI("/api/panier.php/vider", "POST"),
 };
 
-// Order API
 const OrderAPI = {
   getHistory: () => fetchAPI("/api/commande.php"),
   getDetails: (id) => fetchAPI(`/api/commande.php/${id}`),

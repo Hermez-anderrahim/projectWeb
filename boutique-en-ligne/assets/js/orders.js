@@ -213,6 +213,7 @@ async function showOrderDetails(orderId) {
 }
 
 async function loadCheckout() {
+  console.log("DEBUG: Starting checkout process 12");
   const checkoutContainer = document.getElementById("checkout-container");
 
   if (!checkoutContainer) return;

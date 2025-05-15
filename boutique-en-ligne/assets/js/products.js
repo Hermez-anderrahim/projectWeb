@@ -48,11 +48,15 @@ async function loadProductsList(
     // Display products
     productsContainer.innerHTML = "";
     products.data.forEach((product) => {
+      // Check if product has an image
+      const hasImage = product.image_url && product.image_url.trim() !== "";
+      const imageContent = hasImage
+        ? `<img src="${product.image_url}" alt="${product.nom}" class="product-image">`
+        : `<div class="product-placeholder"><i class="fas fa-shoe-prints"></i></div>`;
+
       productsContainer.innerHTML += `
                 <div class="product-card">
-                    <img src="/api/placeholder/400/320" alt="${
-                      product.nom
-                    }" class="product-image">
+                    ${imageContent}
                     <div class="product-details">
                         <h3 class="product-title">${product.nom}</h3>
                         <p class="product-price">${product.prix.toFixed(

@@ -777,8 +777,7 @@
     </style>
 </main>
 
-<!-- Include API scripts -->
-<script src="assets/js/api.js"></script>
+<!-- Include API scripts (fixed to remove duplicate) -->
 <script src="js/api.js"></script>
 
 <script>
@@ -865,6 +864,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('featured-products');
         container.innerHTML = '';
         
+        // Create a single placeholder icon element to prevent multiple image requests
+        const placeholderIcon = '<i class="fas fa-shoe-prints"></i>';
+        
         products.forEach(product => {
             const productCard = document.createElement('div');
             productCard.className = 'product-card';
@@ -876,9 +878,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const hasImage = product.image_url && product.image_url !== '';
             const imageContent = hasImage ? 
                 `<img src="${product.image_url}" alt="${product.nom}">` : 
-                `<div class="placeholder-image">
-                    <i class="fas fa-shoe-prints"></i>
-                </div>`;
+                `<div class="placeholder-image">${placeholderIcon}</div>`;
             
             productCard.innerHTML = `
                 <div class="product-image ${!hasImage ? 'no-image' : ''}">

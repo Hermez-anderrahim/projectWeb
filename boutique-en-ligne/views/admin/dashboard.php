@@ -407,35 +407,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to load dashboard statistics
     async function loadDashboardStats() {
         try {
+            console.log('Fetching dashboard statistics...');
             // Fetch stats from API
-            const statsData = await fetch('/api/admin.php?action=stats')
-                .then(response => response.json())
-                .catch(() => ({
-                    // Fallback mock data if API doesn't exist yet
-                    success: true,
-                    stats: {
-                        total_sales: 12459.99,
-                        total_orders: 134,
-                        total_products: 87,
-                        total_customers: 256
-                    }
-                }));
+            const response = await fetch('/api/admin.php?action=stats');
+            const statsData = await response.json();
             
-            if (statsData.success && statsData.stats) {
+            console.log('Stats data received:', statsData);
+            
+            // Check if response has the expected format with data.stats
+            if (statsData.success && statsData.data && statsData.data.stats) {
+                const stats = statsData.data.stats;
+                
                 // Update stats in DOM
                 document.getElementById('total-sales').textContent = 
                     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
-                        .format(statsData.stats.total_sales);
+                        .format(stats.total_sales);
                         
                 document.getElementById('total-orders').textContent = 
-                    statsData.stats.total_orders;
+                    stats.total_orders;
                     
                 document.getElementById('total-products').textContent = 
-                    statsData.stats.total_products;
+                    stats.total_products;
                     
                 document.getElementById('total-customers').textContent = 
-                    statsData.stats.total_customers;
+                    stats.total_customers;
             } else {
+                console.error('Invalid stats data format:', statsData);
                 // Show error in stats
                 const statValues = document.querySelectorAll('.stat-value');
                 statValues.forEach(el => {

@@ -214,5 +214,186 @@ class Produit {
         
         return $result['total'];
     }
+    
+    // Méthodes pour la gestion des images en base de données
+    
+    /**
+     * Ajouter une image pour un produit dans la base de données
+     * 
+     * @param int $id_produit ID du produit
+     * @param string $image_data Données binaires de l'image (contenu du fichier)
+     * @param string $mime_type Type MIME de l'image
+     * @param bool $is_primary Si c'est l'image principale
+     * @param string $titre Titre optionnel de l'image
+     * @param int $ordre Ordre d'affichage
+     * @return int|bool ID de l'image créée ou false en cas d'échec
+     */
+    public function ajouterImage($id_produit, $image_data, $mime_type, $is_primary = false, $titre = null, $ordre = 0) {
+        try {
+            // Si c'est l'image principale, d'abord réinitialiser toutes les autres
+            if ($is_primary) {
+                $query = "UPDATE produit_images SET is_primary = FALSE WHERE id_produit = :id_produit";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':id_produit', $id_produit, PDO::PARAM_INT);
+                $stmt->execute();
+            }
+            
+            $query = "INSERT INTO produit_images (id_produit, image_data, mime_type, is_primary, titre, ordre) 
+                      VALUES (:id_produit, :image_data, :mime_type, :is_primary, :titre, :ordre)";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_produit', $id_produit, PDO::PARAM_INT);
+            $stmt->bindParam(':image_data', $image_data, PDO::PARAM_LOB);
+            $stmt->bindParam(':mime_type', $mime_type);
+            $stmt->bindParam(':is_primary', $is_primary, PDO::PARAM_BOOL);
+            $stmt->bindParam(':titre', $titre);
+            $stmt->bindParam(':ordre', $ordre, PDO::PARAM_INT);
+            
+            if ($stmt->execute()) {
+                return $this->conn->lastInsertId();
+            }
+            return false;
+        } catch (PDOException $e) {
+            error_log("Erreur lors de l'ajout d'image: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Récupérer une image par son ID
+     * 
+     * @param int $id_image ID de l'image
+     * @return array|bool Données de l'image ou false si non trouvée
+     */
+    public function getImageById($id_image) {
+        $query = "SELECT * FROM produit_images WHERE id_image = :id_image LIMIT 1";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_image', $id_image, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Récupérer toutes les images d'un produit
+     * 
+     * @param int $id_produit ID du produit
+     * @param bool $include_data Si true, inclut les données binaires des images
+     * @return array Images du produit
+     */
+    public function getImagesProduit($id_produit, $include_data = false) {
+        $select = $include_data ? "*" : "id_image, id_produit, mime_type, is_primary, titre, ordre, date_ajout";
+        $query = "SELECT $select FROM produit_images WHERE id_produit = :id_produit ORDER BY is_primary DESC, ordre ASC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_produit', $id_produit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * Récupérer l'image principale d'un produit
+     * 
+     * @param int $id_produit ID du produit
+     * @param bool $include_data Si true, inclut les données binaires de l'image
+     * @return array|bool Données de l'image principale ou false si non trouvée
+     */
+    public function getImagePrincipale($id_produit, $include_data = false) {
+        $select = $include_data ? "*" : "id_image, id_produit, mime_type, is_primary, titre, ordre, date_ajout";
+        $query = "SELECT $select FROM produit_images WHERE id_produit = :id_produit AND is_primary = TRUE LIMIT 1";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_produit', $id_produit, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        $image = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Si aucune image principale n'est définie, on prend la première
+        if (!$image) {
+            $select = $include_data ? "*" : "id_image, id_produit, mime_type, is_primary, titre, ordre, date_ajout";
+            $query = "SELECT $select FROM produit_images WHERE id_produit = :id_produit ORDER BY ordre ASC LIMIT 1";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_produit', $id_produit, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $image = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        
+        return $image;
+    }
+    
+    /**
+     * Supprimer une image
+     * 
+     * @param int $id_image ID de l'image
+     * @return bool Succès ou échec
+     */
+    public function supprimerImage($id_image) {
+        $query = "DELETE FROM produit_images WHERE id_image = :id_image";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_image', $id_image, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    }
+    
+    /**
+     * Définir une image comme principale
+     * 
+     * @param int $id_image ID de l'image
+     * @return bool Succès ou échec
+     */
+    public function definirImagePrincipale($id_image) {
+        try {
+            // Récupérer l'ID du produit pour cette image
+            $query = "SELECT id_produit FROM produit_images WHERE id_image = :id_image LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_image', $id_image, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$result) {
+                return false;
+            }
+            
+            $id_produit = $result['id_produit'];
+            
+            // Retirer le statut principal de toutes les images du produit
+            $query = "UPDATE produit_images SET is_primary = FALSE WHERE id_produit = :id_produit";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_produit', $id_produit, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            // Définir cette image comme principale
+            $query = "UPDATE produit_images SET is_primary = TRUE WHERE id_image = :id_image";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id_image', $id_image, PDO::PARAM_INT);
+            
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("Erreur lors de la définition de l'image principale: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Mettre à jour l'ordre des images
+     * 
+     * @param int $id_image ID de l'image
+     * @param int $ordre Nouvel ordre
+     * @return bool Succès ou échec
+     */
+    public function mettreAJourOrdreImage($id_image, $ordre) {
+        $query = "UPDATE produit_images SET ordre = :ordre WHERE id_image = :id_image";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_image', $id_image, PDO::PARAM_INT);
+        $stmt->bindParam(':ordre', $ordre, PDO::PARAM_INT);
+        
+        return $stmt->execute();
+    }
 }
 ?>

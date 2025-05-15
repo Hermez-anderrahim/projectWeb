@@ -137,7 +137,21 @@ class UtilisateurController {
     
     // Connecter un utilisateur (adapted for API endpoint)
     public function connecterUtilisateur($email, $password, $se_souvenir = false) {
-        // Vérifier les identifiants
+        // First, check if the email exists in the database
+        $query = "SELECT COUNT(*) as count FROM utilisateurs WHERE email = :email";
+        $stmt = Database::getInstance()->getConnection()->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        
+        if($result['count'] == 0) {
+            return [
+                'success' => false,
+                'message' => 'Email non trouvé. Veuillez vérifier vos identifiants.'
+            ];
+        }
+        
+        // Now verify password
         if($this->utilisateur->connecter($email, $password)) {
             // Créer la session utilisateur
             if (session_status() === PHP_SESSION_NONE) {
@@ -167,7 +181,7 @@ class UtilisateurController {
         } else {
             return [
                 'success' => false,
-                'message' => 'Email ou mot de passe incorrect.'
+                'message' => 'Mot de passe incorrect.'
             ];
         }
     }
@@ -205,10 +219,23 @@ class UtilisateurController {
     
     // Obtenir les informations de l'utilisateur connecté
     public function getInfosUtilisateur() {
+        // Debug - Log session status
+        $sessionId = session_id();
+        $sessionStatus = session_status();
+        $sessionStatusText = ($sessionStatus === PHP_SESSION_DISABLED) ? 'DISABLED' : 
+                            (($sessionStatus === PHP_SESSION_NONE) ? 'NONE' : 
+                            (($sessionStatus === PHP_SESSION_ACTIVE) ? 'ACTIVE' : 'UNKNOWN'));
+        
+        error_log("DEBUG [getInfosUtilisateur] - Session ID: $sessionId, Session Status: $sessionStatusText");
+        error_log("DEBUG [getInfosUtilisateur] - SESSION data: " . print_r($_SESSION, true));
+        
         // Vérifier si l'utilisateur est connecté
         $resultat_auth = Auth::verifierAuthentification();
         
+        error_log("DEBUG [getInfosUtilisateur] - Authentication result: " . print_r($resultat_auth, true));
+        
         if(!$resultat_auth['authentifie']) {
+            error_log("DEBUG [getInfosUtilisateur] - User not authenticated");
             return [
                 'success' => false,
                 'message' => 'Utilisateur non connecté.'
@@ -217,21 +244,26 @@ class UtilisateurController {
         
         // Récupérer les informations de l'utilisateur
         $id_utilisateur = $resultat_auth['utilisateur']['id'];
+        error_log("DEBUG [getInfosUtilisateur] - Fetching user with ID: $id_utilisateur");
         
         if($this->utilisateur->getById($id_utilisateur)) {
+            $userData = [
+                'id' => $this->utilisateur->id_utilisateur,
+                'nom' => $this->utilisateur->nom,
+                'prenom' => $this->utilisateur->prenom,
+                'email' => $this->utilisateur->email,
+                'adresse' => $this->utilisateur->adresse,
+                'telephone' => $this->utilisateur->telephone,
+                'est_admin' => $this->utilisateur->est_admin
+            ];
+            error_log("DEBUG [getInfosUtilisateur] - User data retrieved: " . print_r($userData, true));
+            
             return [
                 'success' => true,
-                'utilisateur' => [
-                    'id' => $this->utilisateur->id_utilisateur,
-                    'nom' => $this->utilisateur->nom,
-                    'prenom' => $this->utilisateur->prenom,
-                    'email' => $this->utilisateur->email,
-                    'adresse' => $this->utilisateur->adresse,
-                    'telephone' => $this->utilisateur->telephone,
-                    'est_admin' => $this->utilisateur->est_admin
-                ]
+                'utilisateur' => $userData
             ];
         } else {
+            error_log("DEBUG [getInfosUtilisateur] - User not found in database");
             return [
                 'success' => false,
                 'message' => 'Utilisateur non trouvé.'

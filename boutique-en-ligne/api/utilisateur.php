@@ -64,14 +64,26 @@ try {
                 break;
                 
             case 'connecter':
-                // Vérifier les champs requis
-                if (!isset($data['email']) || !isset($data['password'])) {
-                    echo json_encode(Response::error('Email et mot de passe requis', 400));
+                // Check both password and mot_de_passe fields to handle different parameter names
+                if (!isset($data['email'])) {
+                    echo json_encode(Response::error('Email requis', 400));
+                    exit;
+                }
+                
+                // Get password from either 'password' or 'mot_de_passe' field
+                $password = null;
+                if (isset($data['password']) && !empty($data['password'])) {
+                    $password = $data['password'];
+                } elseif (isset($data['mot_de_passe']) && !empty($data['mot_de_passe'])) {
+                    $password = $data['mot_de_passe'];
+                }
+                
+                if ($password === null) {
+                    echo json_encode(Response::error('Mot de passe requis', 400));
                     exit;
                 }
                 
                 $email = $data['email'];
-                $password = $data['password'];
                 $se_souvenir = isset($data['se_souvenir']) ? (bool)$data['se_souvenir'] : false;
                 
                 echo json_encode($controller->connecterUtilisateur($email, $password, $se_souvenir));
@@ -82,6 +94,8 @@ try {
                 break;
                 
             case 'getInfosUtilisateur':
+                error_log("DEBUG [api/utilisateur.php] - getInfosUtilisateur action called");
+                error_log("DEBUG [api/utilisateur.php] - HTTP Headers: " . json_encode(getallheaders()));
                 echo json_encode($controller->getInfosUtilisateur());
                 break;
                 
