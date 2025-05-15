@@ -313,7 +313,7 @@ class Commande {
             // Get order items
             $query = "SELECT dc.*, p.nom, p.categorie, p.image_url
                       FROM details_commande dc
-                      JOIN produits p ON dc.id_produit = p.id_produit
+                      LEFT JOIN produits p ON dc.id_produit = p.id_produit
                       WHERE dc.id_commande = :id_commande";
             
             $stmt = $this->conn->prepare($query);
@@ -322,11 +322,12 @@ class Commande {
             
             $produits = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Combine the results
-            $commande['produits'] = $produits;
+            // Always add products array even if empty to avoid undefined index
+            $commande['produits'] = $produits ?: [];
             
             return $commande;
         } catch(PDOException $e) {
+            error_log("Error in getDetailsCommande: " . $e->getMessage());
             throw $e;
         }
     }

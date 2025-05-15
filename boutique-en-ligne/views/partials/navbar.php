@@ -66,7 +66,9 @@ $currentRoute = isset($_GET['route']) ? $_GET['route'] : 'home';
                             </button>
                             <div class="dropdown-menu">
                                 <a href="?route=profile" class="dropdown-item">Mon profil</a>
-                                <a href="?route=orders" class="dropdown-item">Mes commandes</a>
+                                <?php if (!$isAdmin) : ?>
+                                    <a href="?route=orders" class="dropdown-item">Mes commandes</a>
+                                <?php endif; ?>
                                 <?php if ($isAdmin) : ?>
                                     <a href="?route=admin-dashboard" class="dropdown-item">Administration</a>
                                 <?php endif; ?>

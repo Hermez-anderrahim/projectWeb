@@ -662,43 +662,69 @@ document.addEventListener('DOMContentLoaded', function() {
     function createProductRow(product) {
         const price = parseFloat(product.prix).toFixed(2) + ' €';
         
-        return `
-            <tr data-id="${product.id_produit}">
-                <td>${product.id_produit}</td>
-                <td class="product-image-cell">
-                    <img src="${product.image_url || 'assets/images/placeholder.png'}" alt="${product.nom}" onerror="this.src='assets/images/placeholder.png'">
-                </td>
-                <td>${product.nom}</td>
-                <td>${product.categorie || 'Non catégorisé'}</td>
-                <td>${price}</td>
-                <td class="stock-cell ${product.stock <= 5 ? 'low-stock' : ''}">${product.stock}</td>
-                <td class="actions-cell">
-                    <button class="btn btn-sm btn-icon edit-product" data-id="${product.id_produit}" title="Modifier">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-icon btn-danger delete-product" data-id="${product.id_produit}" title="Supprimer">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-    }
-    
-    function addProductEventListeners() {
-        // Add event listeners to buttons in the product table
-        document.querySelectorAll('.edit-product').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const productId = this.getAttribute('data-id');
-                editProduct(productId);
-            });
-        });
+        // Create the row with DOM elements for the table
+        const row = document.createElement('tr');
+        row.setAttribute('data-id', product.id_produit);
         
-        document.querySelectorAll('.delete-product').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const productId = this.getAttribute('data-id');
-                deleteProduct(productId);
-            });
-        });
+        // ID cell
+        const idCell = document.createElement('td');
+        idCell.textContent = product.id_produit;
+        
+        // Image cell
+        const imageCell = document.createElement('td');
+        imageCell.className = 'product-image-cell';
+        const productImage = createSafeImage(product.image_url, product.nom);
+        imageCell.appendChild(productImage);
+        
+        // Name cell
+        const nameCell = document.createElement('td');
+        nameCell.textContent = product.nom;
+        
+        // Category cell
+        const categoryCell = document.createElement('td');
+        categoryCell.textContent = product.categorie || 'Non catégorisé';
+        
+        // Price cell
+        const priceCell = document.createElement('td');
+        priceCell.textContent = price;
+        
+        // Stock cell
+        const stockCell = document.createElement('td');
+        stockCell.className = 'stock-cell';
+        if (product.stock <= 5) {
+            stockCell.classList.add('low-stock');
+        }
+        stockCell.textContent = product.stock;
+        
+        // Actions cell
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'actions-cell';
+        
+        const editButton = document.createElement('button');
+        editButton.className = 'btn btn-sm btn-icon edit-product';
+        editButton.setAttribute('data-id', product.id_produit);
+        editButton.setAttribute('title', 'Modifier');
+        editButton.innerHTML = '<i class="fas fa-edit"></i>';
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-sm btn-icon btn-danger delete-product';
+        deleteButton.setAttribute('data-id', product.id_produit);
+        deleteButton.setAttribute('title', 'Supprimer');
+        deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        
+        actionsCell.appendChild(editButton);
+        actionsCell.appendChild(deleteButton);
+        
+        // Append all cells to the row
+        row.appendChild(idCell);
+        row.appendChild(imageCell);
+        row.appendChild(nameCell);
+        row.appendChild(categoryCell);
+        row.appendChild(priceCell);
+        row.appendChild(stockCell);
+        row.appendChild(actionsCell);
+        
+        return row.outerHTML;
     }
     
     async function showAddProductModal() {
@@ -852,8 +878,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // URL input handling
         imageUrlInput.addEventListener('input', function() {
             if (this.value) {
-                // Update preview when URL changes
-                imagePreview.innerHTML = `<img src="${this.value}" alt="Aperçu de l'image" onerror="this.parentNode.innerHTML='<div class=\'no-image\'><i class=\'fas fa-exclamation-circle\'></i><span>Image non disponible</span></div>'">`;
+                // Create safe image element with proper error handling
+                const img = createSafeImage(this.value, "Aperçu de l'image");
+                
+                // Clear existing content and add the safe image
+                imagePreview.innerHTML = '';
+                imagePreview.appendChild(img);
                 
                 // Clear any uploaded file data
                 imageDataInput.value = '';
@@ -1060,6 +1090,44 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(context, args), delay);
         };
+    }
+
+    function createSafeImage(imageUrl, altText = 'Image') {
+        const img = document.createElement('img');
+        
+        // Default to placeholder if no image URL
+        if (!imageUrl) {
+            img.src = 'assets/images/placeholder.png';
+            img.alt = altText;
+        } else {
+            img.src = imageUrl;
+            img.alt = altText;
+            // Add error handler only if we have an image URL
+            img.onerror = function() {
+                this.src = 'assets/images/placeholder.png';
+                // Remove the error handler after it fires once to prevent loops
+                this.onerror = null;
+            };
+        }
+        
+        return img;
+    }
+
+    function addProductEventListeners() {
+        // Add event listeners to edit and delete buttons
+        document.querySelectorAll('.edit-product').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const productId = this.getAttribute('data-id');
+                editProduct(productId);
+            });
+        });
+        
+        document.querySelectorAll('.delete-product').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const productId = this.getAttribute('data-id');
+                deleteProduct(productId);
+            });
+        });
     }
 });
 </script>

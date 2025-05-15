@@ -864,9 +864,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('featured-products');
         container.innerHTML = '';
         
-        // Create a single placeholder icon element to prevent multiple image requests
-        const placeholderIcon = '<i class="fas fa-shoe-prints"></i>';
-        
         products.forEach(product => {
             const productCard = document.createElement('div');
             productCard.className = 'product-card';
@@ -874,21 +871,28 @@ document.addEventListener('DOMContentLoaded', function() {
             // Format price
             const price = parseFloat(product.prix).toFixed(2) + ' €';
             
+            // Create safe image with error handling
+            const createSafeImage = (url, alt) => {
+                if (!url) return `<div class="placeholder-image"><i class="fas fa-shoe-prints"></i></div>`;
+                
+                return `
+                    <img src="${url}" alt="${alt}" onerror="this.onerror=null; this.src='assets/images/placeholder.png';">
+                `;
+            };
+            
             // Check if image exists or use placeholder
             const hasImage = product.image_url && product.image_url !== '';
-            const imageContent = hasImage ? 
-                `<img src="${product.image_url}" alt="${product.nom}">` : 
-                `<div class="placeholder-image">${placeholderIcon}</div>`;
+            const imageContent = createSafeImage(product.image_url, product.nom);
             
             productCard.innerHTML = `
-                <div class="product-image ${!hasImage ? 'no-image' : ''}">
-                    ${imageContent}
-                    <div class="product-actions">
-                        <button class="add-to-cart" data-id="${product.id_produit}" title="Ajouter au panier">
+                <a href="?route=product&id=${product.id_produit}" class="product-link">
+                    <div class="product-image ${!hasImage ? 'no-image' : ''}">
+                        ${imageContent}
+                        <button class="add-to-cart-btn" data-id="${product.id_produit}" title="Ajouter au panier">
                             <i class="fas fa-shopping-cart"></i>
                         </button>
                     </div>
-                </div>
+                </a>
                 <div class="product-info">
                     <h3 class="product-name">
                         <a href="?route=product&id=${product.id_produit}">${product.nom}</a>
@@ -901,8 +905,9 @@ document.addEventListener('DOMContentLoaded', function() {
             container.appendChild(productCard);
             
             // Add event listener to "Add to Cart" button
-            const addToCartBtn = productCard.querySelector('.add-to-cart');
-            addToCartBtn.addEventListener('click', function() {
+            const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
+            addToCartBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent navigation to detail page
                 const productId = this.getAttribute('data-id');
                 addToCart(productId);
             });
@@ -913,28 +918,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const style = document.createElement('style');
             style.id = 'product-card-styles';
             style.textContent = `
-                .product-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-                    gap: 2rem;
-                    margin: 2.5rem 0;
-                }
-                
                 .product-card {
-                    background-color: #fff;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-                    overflow: hidden;
-                    transition: transform 0.3s ease, box-shadow 0.3s ease;
                     display: flex;
                     flex-direction: column;
                     height: 100%;
-                    margin-bottom: 0.5rem;
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    position: relative;
                 }
                 
-                .product-card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+                .product-link {
+                    display: block;
+                    text-decoration: none;
+                    color: inherit;
                 }
                 
                 .product-image {
@@ -942,6 +937,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     height: 220px;
                     overflow: hidden;
                     background-color: #f8f9fa;
+                    border-radius: 8px 8px 0 0;
                 }
                 
                 .product-image img {
@@ -951,66 +947,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     transition: transform 0.5s ease;
                 }
                 
-                .product-image.no-image {
-                    background-color: #e9ecef;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                
-                .placeholder-image {
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                
-                .placeholder-image i {
-                    font-size: 3.5rem;
-                    color: #adb5bd;
-                    opacity: 0.5;
-                }
-                
                 .product-card:hover .product-image img {
                     transform: scale(1.05);
-                }
-                
-                .product-actions {
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-                    padding: 1rem;
-                    opacity: 0;
-                    transform: translateY(20px);
-                    transition: opacity 0.3s ease, transform 0.3s ease;
-                    display: flex;
-                    justify-content: center;
-                }
-                
-                .product-card:hover .product-actions {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-                
-                .add-to-cart {
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 50%;
-                    background-color: #fff;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: none;
-                    cursor: pointer;
-                    transition: background-color 0.3s ease, color 0.3s ease;
-                }
-                
-                .add-to-cart:hover {
-                    background-color: var(--primary-color, #3f51b5);
-                    color: white;
                 }
                 
                 .product-info {
@@ -1024,63 +962,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     font-size: 1rem;
                     margin: 0 0 0.5rem 0;
                     font-weight: 600;
-                    line-height: 1.3;
                 }
                 
                 .product-name a {
-                    color: #333;
+                    color: var(--dark-color);
                     text-decoration: none;
-                    transition: color 0.2s ease;
+                    transition: color 0.3s ease;
                 }
                 
                 .product-name a:hover {
-                    color: var(--primary-color, #3f51b5);
+                    color: var(--primary-color);
                 }
                 
-                .product-category {
-                    color: #6c757d;
-                    font-size: 0.75rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                    margin-bottom: 0.5rem;
+                .product-actions {
+                    padding: 0 1rem 1rem 1rem;
                 }
                 
-                .product-price {
-                    margin-top: auto;
-                    font-weight: 700;
-                    color: var(--primary-color, #3f51b5);
-                    font-size: 1.1rem;
+                .add-to-cart-btn {
+                    width: 100%;
+                    padding: 0.75rem;
+                    background-color: var(--primary-color);
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: background-color 0.3s ease, transform 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
                 
-                /* Responsive adjustments */
-                @media (max-width: 768px) {
-                    .product-grid {
-                        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-                        gap: 1rem;
-                    }
-                    
-                    .product-image {
-                        height: 180px;
-                    }
+                .add-to-cart-btn i {
+                    margin-right: 0.5rem;
                 }
                 
-                @media (max-width: 480px) {
-                    .product-grid {
-                        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                        gap: 0.75rem;
-                    }
-                    
-                    .product-image {
-                        height: 150px;
-                    }
-                    
-                    .product-info {
-                        padding: 0.75rem;
-                    }
-                    
-                    .product-name {
-                        font-size: 0.9rem;
-                    }
+                .add-to-cart-btn:hover {
+                    background-color: var(--primary-dark);
+                    transform: translateY(-2px);
                 }
             `;
             document.head.appendChild(style);

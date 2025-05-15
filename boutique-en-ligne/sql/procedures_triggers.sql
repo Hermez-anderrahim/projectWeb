@@ -1,4 +1,3 @@
-
 DELIMITER //
 CREATE PROCEDURE afficher_details_commande(IN p_id_commande INT, IN p_id_utilisateur INT)
 BEGIN
@@ -143,6 +142,48 @@ BEGIN
     IF NEW.quantite > stock_disponible THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Stock insuffisant pour ce produit';
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger: Prevent negative stock when adding products to cart
+DELIMITER //
+CREATE TRIGGER before_cart_insertion
+BEFORE INSERT ON elements_panier
+FOR EACH ROW
+BEGIN
+    DECLARE stock_disponible INT;
+    
+    -- Vérifier le stock disponible
+    SELECT stock INTO stock_disponible
+    FROM produits
+    WHERE id_produit = NEW.id_produit;
+    
+    IF NEW.quantite > stock_disponible THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Stock insuffisant pour ce produit';
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger: Prevent negative stock when updating cart quantities
+DELIMITER //
+CREATE TRIGGER before_cart_update
+BEFORE UPDATE ON elements_panier
+FOR EACH ROW
+BEGIN
+    DECLARE stock_disponible INT;
+    
+    -- Check available stock only if quantity is increased
+    IF NEW.quantite > OLD.quantite THEN
+        SELECT stock INTO stock_disponible
+        FROM produits
+        WHERE id_produit = NEW.id_produit;
+        
+        IF (NEW.quantite - OLD.quantite) > stock_disponible THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Stock insuffisant pour ce produit';
+        END IF;
     END IF;
 END //
 DELIMITER ;

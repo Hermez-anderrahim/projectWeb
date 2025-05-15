@@ -11,12 +11,17 @@ class ProduitController {
     }
     
     // Obtenir tous les produits
-    public function getTousProduits($page = 1, $limite = 10, $categorie = null) {
-        $produits = $this->produit->getTous($limite, $page, $categorie);
+    public function getTousProduits($page = 1, $limite = 10, $categorie = null, $tri = null) {
+        $produits = $this->produit->getTous($limite, $page, $categorie, $tri);
         
         // Process each product to include proper image URLs
         $processed_products = [];
         foreach ($produits as $produit) {
+            // Skip products with zero or negative stock for display
+            if ($produit['stock'] <= 0) {
+                continue;
+            }
+            
             // Get primary image for this product if it exists
             $image_principale = $this->produit->getImagePrincipale($produit['id_produit']);
             
@@ -76,13 +81,18 @@ class ProduitController {
     }
     
     // Rechercher des produits
-    public function rechercherProduits($terme, $categorie = null, $prix_min = null, $prix_max = null, $page = 1, $limite = 10) {
-        $produits = $this->produit->rechercher($terme, $categorie, $prix_min, $prix_max, $page, $limite);
+    public function rechercherProduits($terme, $categorie = null, $prix_min = null, $prix_max = null, $page = 1, $limite = 10, $tri = null) {
+        $produits = $this->produit->rechercher($terme, $categorie, $prix_min, $prix_max, $page, $limite, $tri);
         $totalCount = $this->produit->compterRecherche($terme, $categorie, $prix_min, $prix_max);
         
         // Process each product to include proper image URLs
         $processed_products = [];
         foreach ($produits as $produit) {
+            // Skip products with zero or negative stock for display
+            if ($produit['stock'] <= 0) {
+                continue;
+            }
+            
             // Get primary image for this product if it exists
             $image_principale = $this->produit->getImagePrincipale($produit['id_produit']);
             
@@ -94,10 +104,13 @@ class ProduitController {
             $processed_products[] = $produit_with_image;
         }
         
+        // Recalculate the total count excluding zero stock products
+        $displayableCount = count($processed_products);
+        
         return [
             'success' => true,
             'produits' => $processed_products,
-            'nb_resultats' => count($processed_products),
+            'nb_resultats' => $displayableCount,
             'total' => $totalCount,
             'page' => $page,
             'limite' => $limite

@@ -1,23 +1,23 @@
 :root {
   /* Colors */
-  --primary-color: #ff6b6b;
-  --primary-light: #ffd8d8;
-  --primary-dark: #e05050;
-  --secondary-color: #4ecdc4;
+  --primary-color: #ff6b6b; /* Changed to orange */
+  --primary-light: #ffd8d8; /* Changed to lighter orange */
+  --primary-dark: #e07d00; /* Changed to darker orange */
+  --secondary-color: #4ecdc4; /* Kept green as secondary color */
   --accent-color: #ffe66d;
-  --dark-color: #1a535c;
+  --dark-color: #292f36;
   --grey-color: #6c757d;
-  --light-grey: #e9ecef;
+  --light-grey: #dee2e6;
   --lighter-grey: #f8f9fa;
   --white-color: #ffffff;
   --black-color: #212529;
 
   /* Status colors */
-  --status-pending: #ffd166;
-  --status-validated: #06d6a0;
-  --status-shipped: #118ab2;
-  --status-delivered: #073b4c;
-  --status-cancelled: #ef476f;
+  --status-pending: #ffc107;
+  --status-validated: #28a745;
+  --status-shipped: #17a2b8;
+  --status-delivered: #4caf50;
+  --status-cancelled: #dc3545;
 
   /* Category colors */
   --men-color: #b5e48c;
@@ -26,6 +26,9 @@
 
   /* Font */
   --body-font: "Poppins", sans-serif;
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-size-base: 16px;
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -42,14 +45,17 @@
   --radius-xl: 24px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
 
   /* Transitions */
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
+
+  /* Container width - INCREASED for a wider layout */
+  --container-width: 1400px;
 }
 
 /* Reset */
@@ -66,10 +72,10 @@ body {
 }
 
 body {
-  font-family: var(--body-font);
+  font-family: var(--font-family);
   font-size: 16px;
   line-height: 1.6;
-  color: var(--black-color);
+  color: var(--dark-color);
   background-color: var(--lighter-grey);
   display: flex;
   flex-direction: column;
@@ -112,9 +118,9 @@ img {
 
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--container-width); /* Increased from 1200px to 1400px */
   margin: 0 auto;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--spacing-sm); /* Reduced padding from --spacing-md to --spacing-sm */
   padding-top: 1.5rem; /* Add some additional spacing at the top of containers */
 }
 
@@ -384,9 +390,7 @@ img {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: var(
-    --spacing-lg
-  ); /* Increased from var(--spacing-sm) to add more space between items */
+  gap: var(--spacing-sm);
 }
 
 .user-actions {
@@ -1237,7 +1241,7 @@ mobile-nav {
 .payment-method {
   position: relative;
   border: 1px solid var(--light-grey);
-  border-radius: var(--radius-md);
+  border-radius: var (--radius-md);
   padding: var(--spacing-md);
   transition: all var(--transition-fast);
   cursor: pointer;
@@ -1323,7 +1327,7 @@ mobile-nav {
 
 .item-name {
   font-weight: 600;
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var (--spacing-xs);
   font-size: 0.95rem;
 }
 
@@ -1531,7 +1535,7 @@ mobile-nav {
 
 .auth-message p {
   color: var(--grey-color);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var (--spacing-lg);
 }
 
 /* Notifications */
@@ -1939,4 +1943,149 @@ mobile-nav {
   font-size: 4rem;
   color: #adb5bd;
   opacity: 0.5;
+}
+
+/* Product card with cart icon button */
+.product-card {
+  position: relative;
+  overflow: visible !important; /* Force visible overflow */
+  border-radius: var(--radius-md);
+  background: var(--white-color);
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px; /* Add margin to prevent overlap */
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.product-image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 100%; /* 1:1 Aspect Ratio */
+  overflow: hidden;
+}
+
+.product-image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.product-card:hover .product-image-container img {
+  transform: scale(1.1);
+}
+
+.add-to-cart-btn {
+  position: absolute;
+  right: -50px;
+  bottom: 20px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 2;
+}
+
+.product-card:hover .add-to-cart-btn {
+  right: 20px;
+  opacity: 1;
+}
+
+.add-to-cart-btn:hover {
+  background-color: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.add-to-cart-btn i {
+  font-size: 1.1rem;
+}
+
+/* Fix blur visibility by ensuring it's fully visible */
+.product-blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.product-image {
+  position: relative;
+  height: 280px;
+  overflow: visible !important; /* Force visible overflow */
+  background-color: #f8f9fa;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Add to cart button - enhanced for icon-only version */
+.add-to-cart-btn {
+  position: absolute;
+  right: -50px; /* Start off-screen */
+  bottom: 20px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 2;
+}
+
+/* Show the button when hovering over the product card */
+.product-card:hover .add-to-cart-btn {
+  right: 20px;
+  opacity: 1;
+}
+
+/* Button hover effect */
+.add-to-cart-btn:hover {
+  background-color: var(--primary-dark);
+  transform: scale(1.1);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Add to cart icon size */
+.add-to-cart-btn i {
+  font-size: 1.1rem;
 }

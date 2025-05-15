@@ -1,3 +1,10 @@
+<?php
+// Check if user is admin, redirect to home if true
+if (isset($_SESSION['utilisateur']) && $_SESSION['utilisateur']['est_admin']) {
+    header('Location: index.php?route=home');
+    exit;
+}
+?>
 <main class="container">
     <div class="orders-history-page">
         <h1 class="page-title">Historique des Commandes</h1>

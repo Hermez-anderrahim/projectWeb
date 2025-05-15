@@ -92,6 +92,11 @@ class Produit {
     
     // Mettre à jour un produit
     public function mettreAJour() {
+        // Ensure stock is never negative
+        if ($this->stock < 0) {
+            $this->stock = 0;
+        }
+        
         $query = "UPDATE produits SET 
                   nom = :nom, 
                   description = :description, 

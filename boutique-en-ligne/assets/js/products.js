@@ -56,7 +56,14 @@ async function loadProductsList(
 
       productsContainer.innerHTML += `
                 <div class="product-card">
-                    ${imageContent}
+                    <div class="product-image-container">
+                        ${imageContent}
+                        <button class="quick-add-to-cart" data-id="${
+                          product.id
+                        }" title="Ajouter au panier">
+                            <i class="fas fa-cart-plus"></i>
+                        </button>
+                    </div>
                     <div class="product-details">
                         <h3 class="product-title">${product.nom}</h3>
                         <p class="product-price">${product.prix.toFixed(
@@ -81,18 +88,35 @@ async function loadProductsList(
     });
 
     // Add event listeners for add to cart buttons
-    document.querySelectorAll(".add-to-cart").forEach((button) => {
-      button.addEventListener("click", async function () {
-        const productId = this.getAttribute("data-id");
-        try {
-          await CartAPI.addItem(productId, 1);
-          alert("Produit ajouté au panier !");
-          updateCartCount();
-        } catch (error) {
-          alert("Erreur: " + error.message);
-        }
+    document
+      .querySelectorAll(".add-to-cart, .quick-add-to-cart")
+      .forEach((button) => {
+        button.addEventListener("click", async function (event) {
+          event.stopPropagation(); // Prevent event bubbling
+          const productId = this.getAttribute("data-id");
+          try {
+            await CartAPI.addItem(productId, 1);
+
+            // Show a temporary success indicator
+            if (this.classList.contains("quick-add-to-cart")) {
+              this.innerHTML = '<i class="fas fa-check"></i>';
+              this.classList.add("added-to-cart");
+
+              // Reset after 1.5 seconds
+              setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-cart-plus"></i>';
+                this.classList.remove("added-to-cart");
+              }, 1500);
+            } else {
+              alert("Produit ajouté au panier !");
+            }
+
+            updateCartCount();
+          } catch (error) {
+            alert("Erreur: " + error.message);
+          }
+        });
       });
-    });
 
     // Create pagination
     if (products.meta && products.meta.total_pages > 1) {

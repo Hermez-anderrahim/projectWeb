@@ -26,20 +26,39 @@
 <style>
 /* Admin Orders Page Styling */
 .admin-container {
-    padding: 2rem 0;
+    padding: 1.5rem 0;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .admin-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    background-color: #f8f9fa;
+    padding: 1.25rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-header::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 5px;
+    background-color: var(--primary-color);
 }
 
 .page-title {
     margin: 0;
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: var(--dark-color);
+    font-weight: 600;
 }
 
 .admin-filters {
@@ -48,28 +67,29 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-bottom: 1.5rem;
-    background-color: var(--white-color);
-    padding: 1rem;
+    margin-bottom: 1.25rem;
+    background-color: #fff;
+    padding: 0.85rem 1.25rem;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .filter-group {
-    min-width: 200px;
+    min-width: 180px;
 }
 
 .filter-group select {
-    border-radius: 30px;
-    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: calc(100% - 15px) center;
-    padding-right: 40px;
-    border: 1px solid var(--light-grey);
-    transition: all 0.3s ease;
+    background-position: calc(100% - 12px) center;
+    padding-right: 30px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
     width: 100%;
+    font-size: 0.85rem;
 }
 
 .filter-group select:focus {
@@ -79,125 +99,136 @@
 }
 
 #orders-table-container {
-    background-color: var(--white-color);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 1.5rem;
     overflow: auto;
-    max-height: 70vh;
+    max-height: 65vh;
 }
 
 .admin-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .admin-table thead th {
-    background-color: var(--light-grey);
-    padding: 1rem;
+    background-color: #f8f9fa;
+    padding: 0.7rem 0.85rem;
     text-align: left;
     font-weight: 600;
-    color: var(--dark-color);
+    color: #495057;
     position: sticky;
     top: 0;
     z-index: 10;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .admin-table tbody tr {
-    border-bottom: 1px solid var(--light-grey);
-    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.2s ease;
 }
 
 .admin-table tbody tr:hover {
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: rgba(247, 247, 247, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .admin-table td {
-    padding: 1rem;
+    padding: 0.7rem 0.85rem;
     vertical-align: middle;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .client-cell {
-    min-width: 200px;
+    min-width: 180px;
 }
 
 .client-name {
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
+    font-size: 0.85rem;
 }
 
 .client-email {
-    font-size: 0.85rem;
-    color: var(--grey-color);
+    font-size: 0.75rem;
+    color: #6c757d;
 }
 
 .order-status {
     display: inline-block;
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 0.7rem;
     border-radius: 30px;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     font-weight: 600;
-}
-
-.status-pending {
-    background-color: #FEF9C3;
-    color: #854D0E;
-}
-
-.status-validated {
-    background-color: #DCFCE7;
-    color: #166534;
-}
-
-.status-shipped {
-    background-color: #E0F2FE;
-    color: #075985;
-}
-
-.status-delivered {
-    background-color: #E0E7FF;
-    color: #3730A3;
-}
-
-.status-cancelled {
-    background-color: #FEE2E2;
-    color: #991B1B;
+    letter-spacing: 0.3px;
 }
 
 .actions-cell {
-    width: 100px;
-    text-align: right;
+    width: 90px;
+    text-align: center;
     white-space: nowrap;
 }
 
 .actions-cell .btn {
-    margin-left: 0.5rem;
+    margin: 0 0.15rem;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+    background-color: #f5f5f5;
+    color: #495057;
+}
+
+.actions-cell .btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 5px rgba(255, 107, 107, 0.2);
 }
 
 .pagination {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .pagination-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--white-color);
-    border: 1px solid var(--light-grey);
-    color: var(--dark-color);
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    color: #495057;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 0.75rem;
 }
 
 .pagination-btn:hover:not([disabled]) {
     background-color: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 5px rgba(255, 107, 107, 0.2);
 }
 
 .pagination-btn[disabled] {
@@ -206,8 +237,8 @@
 }
 
 .pagination-info {
-    font-size: 0.9rem;
-    color: var(--grey-color);
+    font-size: 0.75rem;
+    color: #6c757d;
 }
 
 /* Order Detail Modal Styling */
@@ -239,12 +270,12 @@
     left: 50%;
     transform: translate(-50%, -50%) scale(0.9);
     z-index: 1001;
-    background-color: var(--white-color);
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     width: 90%;
     max-width: 800px;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: auto;
     opacity: 0;
     visibility: hidden;
@@ -265,39 +296,57 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem;
-    border-bottom: 1px solid var(--light-grey);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .modal-title {
     margin: 0;
-    font-size: 1.25rem;
-    color: var(--dark-color);
+    font-size: 1.1rem;
+    color: #212529;
+    font-weight: 600;
 }
 
 .modal-close {
     background: none;
     border: none;
-    color: var(--grey-color);
-    font-size: 1.25rem;
+    color: #6c757d;
+    font-size: 1rem;
     cursor: pointer;
     transition: color 0.2s ease;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
 }
 
 .modal-close:hover {
     color: var(--primary-color);
+    background-color: rgba(255, 107, 107, 0.1);
 }
 
 .modal-body {
-    padding: 1.5rem;
+    padding: 1.25rem;
 }
 
 .modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    padding: 1.25rem;
-    border-top: 1px solid var(--light-grey);
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
 }
 
 .order-details-modal {
@@ -313,44 +362,48 @@
 .detail-sections {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .detail-section {
     background-color: #f8f9fa;
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 1rem;
+    border: 1px solid #f0f0f0;
 }
 
 .section-title {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     margin-top: 0;
-    margin-bottom: 1.25rem;
-    color: var(--dark-color);
-    border-bottom: 1px solid var(--light-grey);
-    padding-bottom: 0.75rem;
+    margin-bottom: 0.85rem;
+    color: #343a40;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 600;
 }
 
 .detail-grid {
     display: grid;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
 .detail-row {
     display: grid;
     grid-template-columns: 40% 60%;
-    gap: 1rem;
+    gap: 0.5rem;
+    align-items: center;
 }
 
 .detail-label {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    color: var(--grey-color);
+    color: #6c757d;
 }
 
 .detail-value {
-    font-size: 0.9rem;
-    color: var(--dark-color);
+    font-size: 0.85rem;
+    color: #212529;
 }
 
 .products-section {
@@ -360,35 +413,41 @@
 .order-items-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
 }
 
 .order-items-table th,
 .order-items-table td {
-    padding: 0.75rem;
+    padding: 0.6rem 0.75rem;
     text-align: left;
-    border-bottom: 1px solid var(--light-grey);
+    border-bottom: 1px solid #e9ecef;
 }
 
 .order-items-table th {
     font-weight: 600;
-    color: var(--grey-color);
-    font-size: 0.9rem;
+    color: #495057;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: #f8f9fa;
 }
 
 .product-cell {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    min-width: 300px;
+    gap: 0.75rem;
+    min-width: 220px;
 }
 
 .product-image {
-    width: 50px;
-    height: 50px;
+    width: 36px;
+    height: 36px;
     border-radius: 4px;
     overflow: hidden;
-    border: 1px solid var(--light-grey);
+    border: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    flex-shrink: 0;
 }
 
 .product-image img {
@@ -403,24 +462,28 @@
 
 .product-name {
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
+    font-size: 0.8rem;
 }
 
 .product-category {
-    font-size: 0.8rem;
-    color: var (--grey-color);
+    font-size: 0.7rem;
+    color: #6c757d;
 }
 
 .order-items-table tfoot {
     font-weight: 700;
+    background-color: #f8f9fa;
 }
 
 .total-label {
     text-align: right;
+    font-size: 0.8rem;
 }
 
 .total-value {
     color: var(--primary-color);
+    font-size: 0.85rem;
 }
 
 /* Status Modal Styling */
@@ -491,6 +554,59 @@
 
 .status-text {
     font-weight: 500;
+}
+
+/* Status Modal Styling - Smaller with Vertical Stacking */
+.status-modal {
+    max-width: 350px;
+}
+
+.status-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.status-option {
+    display: flex;
+    align-items: center;
+}
+
+.status-option input[type="radio"] {
+    display: none;
+}
+
+.status-option label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--light-grey);
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.status-option input[type="radio"]:checked + label {
+    background-color: rgba(255, 107, 107, 0.1);
+    border-color: var(--primary-color);
+}
+
+.status-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.status-text {
+    font-weight: 500;
+    font-size: 0.9rem;
 }
 
 .empty-state {
@@ -848,13 +964,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function displayOrderDetailsModal(order) {
+        // Remove any existing modals first to prevent stacking/infinite loops
+        document.querySelectorAll('.modal-backdrop, .modal').forEach(el => el.remove());
+        
         // Create modal backdrop
         const modalBackdrop = document.createElement('div');
         modalBackdrop.className = 'modal-backdrop';
         
-        // Create modal content
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content order-details-modal';
+        // Create modal
+        const modal = document.createElement('div');
+        modal.className = 'modal order-details-modal';
         
         const date = new Date(order.date_commande).toLocaleDateString('fr-FR', {
             day: '2-digit',
@@ -877,140 +996,168 @@ document.addEventListener('DOMContentLoaded', function() {
             default: statusClass = 'status-default';
         }
         
-        modalContent.innerHTML = `
-            <div class="modal-header">
-                <h2 class="modal-title">Détails de la commande #${order.id_commande}</h2>
-                <button class="modal-close"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="order-details">
-                    <div class="detail-sections">
-                        <div class="detail-section">
-                            <h3 class="section-title">Informations de commande</h3>
-                            <div class="detail-grid">
-                                <div class="detail-row">
-                                    <div class="detail-label">N° de commande</div>
-                                    <div class="detail-value">#${order.id_commande}</div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Date</div>
-                                    <div class="detail-value">${date}</div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Statut</div>
-                                    <div class="detail-value">
-                                        <span class="order-status ${statusClass}">${getStatusLabel(order.statut)}</span>
+        // Create base modal HTML structure (without the product items)
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Détails de la commande #${order.id_commande}</h2>
+                    <button class="modal-close"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="order-details">
+                        <div class="detail-sections">
+                            <div class="detail-section">
+                                <h3 class="section-title">Informations de commande</h3>
+                                <div class="detail-grid">
+                                    <div class="detail-row">
+                                        <div class="detail-label">N° de commande</div>
+                                        <div class="detail-value">#${order.id_commande}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Date</div>
+                                        <div class="detail-value">${date}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Statut</div>
+                                        <div class="detail-value">
+                                            <span class="order-status ${statusClass}">${getStatusLabel(order.statut)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Total</div>
+                                        <div class="detail-value">${total}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Méthode de paiement</div>
+                                        <div class="detail-value">${getPaymentMethodLabel(order.methode_paiement)}</div>
                                     </div>
                                 </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Total</div>
-                                    <div class="detail-value">${total}</div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Méthode de paiement</div>
-                                    <div class="detail-value">${getPaymentMethodLabel(order.methode_paiement)}</div>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <h3 class="section-title">Informations du client</h3>
+                                <div class="detail-grid">
+                                    <div class="detail-row">
+                                        <div class="detail-label">Nom</div>
+                                        <div class="detail-value">${order.prenom || ''} ${order.nom || ''}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Email</div>
+                                        <div class="detail-value">${order.email || ''}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Adresse</div>
+                                        <div class="detail-value">${order.adresse || 'Non spécifiée'}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Ville</div>
+                                        <div class="detail-value">${(order.code_postal || '') + ' ' + (order.ville || '')}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-label">Téléphone</div>
+                                        <div class="detail-value">${order.telephone || 'Non spécifié'}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="detail-section">
-                            <h3 class="section-title">Informations du client</h3>
-                            <div class="detail-grid">
-                                <div class="detail-row">
-                                    <div class="detail-label">Nom</div>
-                                    <div class="detail-value">${order.prenom || ''} ${order.nom || ''}</div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Email</div>
-                                    <div class="detail-value">${order.email || ''}</div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Adresse</div>
-                                    <div class="detail-value">${order.adresse || 'Non spécifiée'}</div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Ville</div>
-                                    <div class="detail-value">${(order.code_postal || '') + ' ' + (order.ville || '')}</div>
-                                </div>
-                                <div class="detail-row">
-                                    <div class="detail-label">Téléphone</div>
-                                    <div class="detail-value">${order.telephone || 'Non spécifié'}</div>
-                                </div>
-                            </div>
+                        <div class="detail-section products-section">
+                            <h3 class="section-title">Produits</h3>
+                            <table class="order-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Produit</th>
+                                        <th>Prix</th>
+                                        <th>Qté</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="total-label">Total</td>
+                                        <td class="total-value">${total}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
-                    
-                    <div class="detail-section products-section">
-                        <h3 class="section-title">Produits</h3>
-                        <table class="order-items-table">
-                            <thead>
-                                <tr>
-                                    <th>Produit</th>
-                                    <th>Prix</th>
-                                    <th>Qté</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline modal-close-btn">Fermer</button>
+                    <button class="btn btn-primary edit-status-btn" data-id="${order.id_commande}">Modifier le statut</button>
+                </div>
+            </div>
         `;
         
-        // Add order items
+        // Add modal to document
+        document.body.appendChild(modalBackdrop);
+        document.body.appendChild(modal);
+        
+        // Get the table body to add products
+        const tableBody = modal.querySelector('.order-items-table tbody');
+        
+        // Add order items using DOM creation to avoid image issues
         if (order.produits && order.produits.length > 0) {
             order.produits.forEach(item => {
                 const price = parseFloat(item.prix_unitaire).toFixed(2) + ' €';
                 const itemTotal = parseFloat(item.prix_unitaire * item.quantite).toFixed(2) + ' €';
                 
-                modalContent.innerHTML += `
-                    <tr>
-                        <td class="product-cell">
-                            <div class="product-image">
-                                <img src="${item.image_url || 'assets/images/placeholder.png'}" alt="${item.nom}" onerror="this.src='assets/images/placeholder.png'">
-                            </div>
-                            <div class="product-info">
-                                <div class="product-name">${item.nom}</div>
-                                <div class="product-category">${item.categorie || ''}</div>
-                            </div>
-                        </td>
-                        <td>${price}</td>
-                        <td>${item.quantite}</td>
-                        <td>${itemTotal}</td>
-                    </tr>
-                `;
+                // Create row element
+                const row = document.createElement('tr');
+                
+                // Create product cell with image
+                const productCell = document.createElement('td');
+                productCell.className = 'product-cell';
+                
+                // Use our safe image creation helper
+                const imageElement = createSafeProductImage(item.image_url, item.nom);
+                
+                // Create product info div
+                const productInfo = document.createElement('div');
+                productInfo.className = 'product-info';
+                
+                const productName = document.createElement('div');
+                productName.className = 'product-name';
+                productName.textContent = item.nom || '';
+                
+                const productCategory = document.createElement('div');
+                productCategory.className = 'product-category';
+                productCategory.textContent = item.categorie || '';
+                
+                productInfo.appendChild(productName);
+                productInfo.appendChild(productCategory);
+                
+                productCell.appendChild(imageElement);
+                productCell.appendChild(productInfo);
+                
+                // Create other cells
+                const priceCell = document.createElement('td');
+                priceCell.textContent = price;
+                
+                const qtyCell = document.createElement('td');
+                qtyCell.textContent = item.quantite;
+                
+                const totalCell = document.createElement('td');
+                totalCell.textContent = itemTotal;
+                
+                // Add cells to row
+                row.appendChild(productCell);
+                row.appendChild(priceCell);
+                row.appendChild(qtyCell);
+                row.appendChild(totalCell);
+                
+                // Add row to table body
+                tableBody.appendChild(row);
             });
         } else {
-            modalContent.innerHTML += `
-                <tr>
-                    <td colspan="4">Aucun détail disponible pour cette commande</td>
-                </tr>
-            `;
+            const emptyRow = document.createElement('tr');
+            const emptyCell = document.createElement('td');
+            emptyCell.setAttribute('colspan', '4');
+            emptyCell.textContent = 'Aucun détail disponible pour cette commande';
+            emptyRow.appendChild(emptyCell);
+            tableBody.appendChild(emptyRow);
         }
-        
-        modalContent.innerHTML += `
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3" class="total-label">Total</td>
-                                    <td class="total-value">${total}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline modal-close-btn">Fermer</button>
-                <button class="btn btn-primary edit-status-btn" data-id="${order.id_commande}">Modifier le statut</button>
-            </div>
-        `;
-        
-        // Create modal
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.appendChild(modalContent);
-        
-        // Add modal to document
-        document.body.appendChild(modalBackdrop);
-        document.body.appendChild(modal);
         
         // Add event listeners
         modalBackdrop.addEventListener('click', closeModal);
@@ -1229,6 +1376,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 notification.remove();
             }, 300);
         }, 3000);
+    }
+
+    // Helper function to safely create product image element
+    function createSafeProductImage(imageUrl, productName) {
+        const container = document.createElement('div');
+        container.className = 'product-image';
+        
+        const img = document.createElement('img');
+        // Default to placeholder if no image URL
+        if (!imageUrl) {
+            img.src = 'assets/images/placeholder.png';
+        } else {
+            img.src = imageUrl;
+            // Add error handler only if we have an image URL
+            img.onerror = function() {
+                this.src = 'assets/images/placeholder.png';
+                // Remove the handler after it fires once to prevent loops
+                this.onerror = null;
+            };
+        }
+        img.alt = productName || 'Produit';
+        
+        container.appendChild(img);
+        return container;
     }
 });
 </script>

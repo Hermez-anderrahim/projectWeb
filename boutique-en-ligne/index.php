@@ -62,7 +62,7 @@ switch ($route) {
         
     // Shop route for category browsing
     case 'shop':
-        include_once 'views/products/list.php';
+        include_once 'views/products/shop.php'; // Use our new shop page with filtering
         break;
         
     default:

@@ -1,27 +1,277 @@
 <style>
-/* Product placeholder styles */
-.product-placeholder {
+/* Product detail page styles */
+.product-detail {
+    margin: 2rem 0;
+}
+
+/* New layout: Two column design with image on left, info on right */
+.product-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: flex-start;
+}
+
+.product-gallery {
+    position: relative;
+}
+
+/* Image styling to fill container */
+.main-image {
+    width: 100%;
+    height: 500px; /* Increased height */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    background-color: #f8f9fa;
+}
+
+.main-image img {
     width: 100%;
     height: 100%;
+    object-fit: contain; /* This ensures the image keeps its aspect ratio */
+    display: block;
+    background-color: #fff;
+}
+
+/* Product information styling */
+.product-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--dark-color);
+    line-height: 1.2;
+}
+
+.product-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.product-category {
+    color: var(--grey-color);
+}
+
+.product-category span {
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.product-stock {
+    font-weight: 600;
+}
+
+.in-stock {
+    color: #28a745;
+}
+
+.out-of-stock {
+    color: #dc3545;
+}
+
+.product-price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin: 1.5rem 0;
+}
+
+.product-description {
+    line-height: 1.8;
+    color: var(--dark-color);
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 200px;
+}
+
+.quantity-btn {
+    width: 40px;
+    height: 40px;
+    background: #f5f5f5;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.quantity-btn:hover {
+    background: #e9e9e9;
+}
+
+#product-quantity {
+    width: 60px;
+    height: 40px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid rgba(0,0,0,0.1);
+    border-right: 1px solid rgba(0,0,0,0.1);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Remove input number arrows */
+#product-quantity::-webkit-inner-spin-button, 
+#product-quantity::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+
+/* Add to cart button */
+.btn-add-to-cart {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #e9ecef;
+    height: 50px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
     border-radius: 8px;
-}
-
-.product-placeholder i {
-    font-size: 4rem;
-    color: #adb5bd;
-    opacity: 0.5;
-}
-
-.main-image {
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0 2rem;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-width: 100%;
     width: 100%;
-    height: 400px;
-    overflow: hidden;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-add-to-cart i {
+    font-size: 1.2rem;
+}
+
+.btn-add-to-cart:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.btn-add-to-cart:disabled {
+    background-color: #adb5bd;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    color: var(--grey-color);
+    font-size: 1.1rem;
+}
+
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    color: #dc3545;
+    font-size: 1.1rem;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 6px;
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    color: #333;
+    font-weight: 600;
+    z-index: 1000;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.notification.success {
+    border-left: 4px solid #28a745;
+}
+
+.notification.error {
+    border-left: 4px solid #dc3545;
+}
+
+.notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+    .product-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .main-image {
+        height: 400px;
+    }
+    
+    .product-gallery {
+        position: relative;
+    }
+    
+    .product-title {
+        font-size: 1.8rem;
+    }
+    
+    .product-price {
+        font-size: 2rem;
+        margin: 1rem 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .product-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .quantity-control {
+        width: 100%;
+    }
+    
+    .main-image {
+        height: 300px;
+    }
+    
+    .product-title {
+        font-size: 1.5rem;
+    }
+    
+    .product-price {
+        font-size: 1.8rem;
+    }
+    
+    .quick-add-to-cart {
+        width: 45px;
+        height: 45px;
+    }
 }
 </style>
 
@@ -69,12 +319,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const price = parseFloat(product.prix).toFixed(2) + ' €';
         
         container.innerHTML = `
-            <div class="breadcrumb">
-                <a href="?route=home">Accueil</a> > 
-                <a href="?route=shop&category=${product.categorie || ''}">${product.categorie || 'Produits'}</a> > 
-                <span>${product.nom}</span>
-            </div>
-            
             <div class="product-layout">
                 <div class="product-gallery">
                     <div class="main-image">
@@ -109,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <button class="quantity-btn plus" id="increase-quantity">+</button>
                         </div>
                         
-                        <button class="btn btn-primary btn-add-to-cart" id="add-to-cart" ${product.stock <= 0 ? 'disabled' : ''}>
+                        <button class="btn-add-to-cart" id="add-to-cart" ${product.stock <= 0 ? 'disabled' : ''}>
                             <i class="fas fa-shopping-cart"></i> Ajouter au panier
                         </button>
                     </div>

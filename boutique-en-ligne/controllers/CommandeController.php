@@ -266,52 +266,59 @@ class CommandeController {
             ];
         }
         
-        $offset = ($page - 1) * $limite;
-        $condition = "";
-        $params = [];
-        
-        if($statut) {
-            $condition = "WHERE statut = :statut";
-            $params[':statut'] = $statut;
+        try {
+            $offset = ($page - 1) * $limite;
+            $condition = "";
+            $params = [];
+            
+            if($statut) {
+                $condition = "WHERE c.statut = :statut";
+                $params[':statut'] = $statut;
+            }
+            
+            $query = "SELECT c.*, u.nom, u.prenom, u.email 
+                    FROM commandes c 
+                    JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur 
+                    $condition 
+                    ORDER BY c.date_commande DESC 
+                    LIMIT :limite OFFSET :offset";
+            
+            $stmt = Database::getInstance()->getConnection()->prepare($query);
+            $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+            
+            if($statut) {
+                $stmt->bindParam(':statut', $statut);
+            }
+            
+            $stmt->execute();
+            $commandes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Compter le nombre total de commandes
+            $query_count = "SELECT COUNT(*) as total FROM commandes c $condition";
+            $stmt_count = Database::getInstance()->getConnection()->prepare($query_count);
+            
+            if($statut) {
+                $stmt_count->bindParam(':statut', $statut);
+            }
+            
+            $stmt_count->execute();
+            $total = $stmt_count->fetch(PDO::FETCH_ASSOC)['total'];
+            
+            return [
+                'success' => true,
+                'commandes' => $commandes,
+                'total' => (int)$total,
+                'page' => (int)$page,
+                'limite' => (int)$limite,
+                'pages_total' => (int)ceil($total / $limite)
+            ];
+        } catch(PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erreur de base de données: ' . $e->getMessage()
+            ];
         }
-        
-        $query = "SELECT c.*, u.nom, u.prenom, u.email 
-                  FROM commandes c 
-                  JOIN utilisateurs u ON c.id_utilisateur = u.id_utilisateur 
-                  $condition 
-                  ORDER BY c.date_commande DESC 
-                  LIMIT :limite OFFSET :offset";
-        
-        $stmt = Database::getInstance()->getConnection()->prepare($query);
-        $stmt->bindParam(':limite', $limite, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
-        
-        if($statut) {
-            $stmt->bindParam(':statut', $statut);
-        }
-        
-        $stmt->execute();
-        $commandes = $stmt->fetchAll();
-        
-        // Compter le nombre total de commandes
-        $query_count = "SELECT COUNT(*) as total FROM commandes $condition";
-        $stmt_count = Database::getInstance()->getConnection()->prepare($query_count);
-        
-        if($statut) {
-            $stmt_count->bindParam(':statut', $statut);
-        }
-        
-        $stmt_count->execute();
-        $total = $stmt_count->fetch()['total'];
-        
-        return [
-            'success' => true,
-            'commandes' => $commandes,
-            'total' => $total,
-            'page' => $page,
-            'limite' => $limite,
-            'pages_total' => ceil($total / $limite)
-        ];
     }
     
     // Méthode pour l'administrateur : modifier le statut d'une commande
